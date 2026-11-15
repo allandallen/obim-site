@@ -1,63 +1,131 @@
-// Assistente virtual da Office BIM (Gemini via Supabase). Orbe no canto com texto, voz e anexos.
+const CSS = ".bot{--bg2:#0e1222;--tx:#e8ecf5;--line:rgba(255,255,255,.12);--mut:#94a3b8;font-family:Inter,system-ui,sans-serif;color:var(--tx)}.bot *{box-sizing:border-box}.bot a{color:#93c5fd}\n/* assistente virtual: orbe animado */\n.bot{position:fixed;right:20px;bottom:20px;z-index:45}\n.orb{position:relative;width:62px;height:62px;border:0;border-radius:50%;padding:0;cursor:pointer;background:none;display:block}\n.orb-core{position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 0deg,#4285f4,#9b72cb,#d96570,#f4b400,#34a853,#4285f4);animation:orbSpin 6s linear infinite;box-shadow:inset 0 0 18px rgba(255,255,255,.55)}\n.orb-core:after{content:\"\";position:absolute;inset:7px;border-radius:50%;background:radial-gradient(circle at 35% 30%,rgba(255,255,255,.95),rgba(255,255,255,.25) 35%,rgba(10,16,40,.85) 75%);mix-blend-mode:normal}\n.orb-glow{position:absolute;inset:-10px;border-radius:50%;background:conic-gradient(from 90deg,#4285f4,#9b72cb,#d96570,#4285f4);filter:blur(16px);opacity:.55;z-index:-1;animation:orbSpin 9s linear infinite reverse,orbBreath 3s ease-in-out infinite}\n.orb:hover .orb-core{animation-duration:2.5s}.bot.thinking .orb-core,.bot.thinking .orb.mini .orb-core{animation-duration:1s}\n.orb-tip{position:absolute;right:74px;top:50%;transform:translateY(-50%) scale(.9);opacity:0;white-space:nowrap;background:#fff;color:#0f172a;font:700 .82rem/1 Manrope,Inter,sans-serif;padding:9px 12px;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.25);transition:all .3s;pointer-events:none}\n.bot.hello:not(.open) .orb-tip,.orb:hover .orb-tip{opacity:1;transform:translateY(-50%) scale(1)}\n.bot.open .orb-tip{display:none}\n@keyframes orbSpin{to{transform:rotate(360deg)}}@keyframes orbBreath{50%{opacity:.85;transform:scale(1.08)}}\n.orb.mini{width:34px;height:34px;flex:none;pointer-events:none}.orb.mini .orb-core:after{inset:5px}\n.bot-win{position:absolute;right:0;bottom:76px;width:min(380px,calc(100vw - 28px));height:min(560px,74vh);display:flex;flex-direction:column;background:var(--bg2);color:var(--tx);border:1px solid var(--line);border-radius:20px;box-shadow:0 24px 70px rgba(0,0,0,.5);overflow:hidden;animation:botIn .25s ease-out}\n@keyframes botIn{from{opacity:0;transform:translateY(12px) scale(.98)}}\n.bot-win[hidden]{display:none}\n.bot-win header{position:relative;display:flex;align-items:center;gap:10px;padding:12px 40px 12px 14px;background:linear-gradient(135deg,#1e3a8a,#5b21b6);color:#fff}.bot-win header div{display:flex;flex-direction:column}.bot-win header span{font-size:.72rem;opacity:.85}\n.bot-x{position:absolute;right:10px;top:10px;border:0;background:none;color:#fff;font-size:1.4rem;cursor:pointer}\n.bot-log{flex:1;overflow:auto;padding:14px;display:flex;flex-direction:column;gap:8px}\n.bot-m{margin:0;max-width:88%;padding:9px 12px;border-radius:14px;font-size:.88rem;line-height:1.45;word-break:break-word}.bot-m.a{background:rgba(127,127,127,.12);border-bottom-left-radius:4px}.bot-m.u{align-self:flex-end;background:#4f46e5;color:#fff;border-bottom-right-radius:4px}.bot-m.u a{color:#fff}\n.bot-m.typing{opacity:.6;animation:livep 1s infinite}\n.bot-sug{display:flex;flex-wrap:wrap;gap:6px;padding:0 14px 10px}.bot-sug button{border:1px solid var(--line);background:transparent;color:var(--tx);border-radius:999px;padding:6px 10px;font-size:.76rem;cursor:pointer}.bot-sug button:hover{border-color:#7c3aed}\n.bot-files{display:flex;flex-wrap:wrap;gap:6px;padding:0 12px}.bot-files span{font-size:.72rem;background:rgba(124,58,237,.18);padding:4px 8px;border-radius:8px}\n.bot-f{display:flex;gap:6px;align-items:center;padding:10px;border-top:1px solid var(--line)}.bot-f input[name=q]{flex:1;min-width:0;border:1px solid var(--line);background:transparent;color:var(--tx);border-radius:999px;padding:10px 14px;font:inherit;font-size:.9rem}\n.bot-ic{width:36px;height:36px;border:0;border-radius:50%;background:rgba(127,127,127,.12);cursor:pointer;font-size:1rem;flex:none}.bot-ic.rec{background:#ef4444;animation:livep 1s infinite}\n.bot-send{width:40px;height:40px;border:0;border-radius:50%;background:linear-gradient(135deg,#2563eb,#7c3aed);color:#fff;cursor:pointer;flex:none}\n.bot-h{display:block;text-align:center;font-size:.75rem;padding:0 0 10px}\n@media(max-width:700px){.bot{right:14px;bottom:14px}.orb{width:56px;height:56px}}\n@media (prefers-reduced-motion:reduce){.orb-core,.orb-glow{animation:none}}\n/* n\u00fameros da p\u00e1gina inicial: cart\u00f5es limpos */\n.statsbar{background:transparent;border:0}\n.statsbar .wrap{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;padding:22px 20px}\n.statsbar .wrap>div{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 10px;position:relative;overflow:hidden}\n.statsbar .wrap>div:before{content:\"\";position:absolute;left:0;top:0;right:0;height:3px;background:linear-gradient(90deg,#2563eb,#06b6d4)}\n.statsbar b{background:none;-webkit-background-clip:initial;background-clip:initial;color:var(--tx);font:800 1.7rem/1.1 Manrope,Inter,sans-serif;letter-spacing:-.02em}\n.statsbar span{display:block;margin-top:4px;font-size:.78rem;text-transform:uppercase;letter-spacing:.08em}\n@media(max-width:700px){.statsbar .wrap{grid-template-columns:repeat(2,1fr)}.statsbar .wrap>div:last-child{grid-column:span 2}.statsbar b{font-size:1.4rem}}\n/* celular: bot\u00f5es flutuantes menores, sem cobrir o conte\u00fado */\n@media(max-width:700px){\n  .obim{display:flex;padding:3px;left:12px;bottom:16px}.obim-ic{width:44px;height:44px}\n  .qc{right:80px;bottom:16px}.qc-btn{min-height:44px;padding:4px 14px 4px 4px;font-size:.82rem}.qc-ic{width:36px;height:36px}.qc-btn em{display:none}\n  .orb{width:52px;height:52px}\n}\n/* ===== Destaques do topo (feitos em c\u00f3digo, sempre n\u00edtidos) ===== */\n.hero-banners .banner-track{aspect-ratio:auto;height:clamp(420px,46vw,520px);max-height:none;background:#070b18}\n.hero-slide{display:grid;grid-template-columns:1.05fr .95fr;align-items:center;gap:30px;padding:40px 56px;background:radial-gradient(900px 500px at 85% 50%,color-mix(in srgb,var(--b) 45%,transparent),transparent 70%),radial-gradient(700px 400px at 0% 100%,color-mix(in srgb,var(--a) 35%,transparent),transparent 70%),linear-gradient(135deg,#060a17,#0b1026);color:#fff;overflow:hidden}\n.hs-grid{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;mask-image:linear-gradient(90deg,transparent,#000 40%,#000)}\n.hs-text{position:relative;z-index:2;max-width:560px}\n.hs-kicker{display:inline-block;font:800 .72rem/1 Manrope,Inter,sans-serif;letter-spacing:.18em;text-transform:uppercase;padding:7px 12px;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.16);margin-bottom:16px}\n.hs-text h2{font:800 clamp(1.7rem,3.6vw,3rem)/1.08 Manrope,Inter,sans-serif;letter-spacing:-.02em;margin:0 0 14px;color:#fff}\n.hs-text h2 .grad{background:linear-gradient(90deg,var(--a),var(--b));-webkit-background-clip:text;background-clip:text;color:transparent;filter:brightness(1.5)}\n.hs-text p{font-size:clamp(.95rem,1.3vw,1.08rem);line-height:1.6;color:#cbd5e1;margin:0 0 18px}\n.hs-price{font:800 2rem/1 Manrope,Inter,sans-serif;margin:0 0 20px}.hs-price small{font-size:.85rem;font-weight:600;color:#94a3b8;margin:0 4px}\n.hs-cta{display:flex;gap:12px;flex-wrap:wrap}.hs-cta .btn{background:linear-gradient(135deg,var(--a),var(--b));border:0}.hs-cta .btn.ghost{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.2);color:#fff}\n.hs-visual{position:relative;height:100%;min-height:300px;z-index:1}\n.hs-img{position:absolute;border-radius:16px;box-shadow:0 30px 60px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.08);object-fit:cover;aspect-ratio:16/10;transition:transform 1.2s cubic-bezier(.2,.8,.2,1)}\n.hs-img.k0{width:78%;right:4%;top:50%;transform:translateY(-50%) perspective(1200px) rotateY(-12deg) rotateX(4deg)}\n.hs-img.k1{width:46%;left:0;top:6%;transform:perspective(1200px) rotateY(-14deg) translateZ(-60px);opacity:.85}\n.hs-img.k2{width:44%;left:6%;bottom:4%;transform:perspective(1200px) rotateY(-14deg) translateZ(-40px);opacity:.9}\n.hs-img.k1~.hs-img.k0,.hs-visual .hs-img.k0:only-child{width:84%}\n.banner.on .hs-img.k0{animation:hsFloat 6s ease-in-out infinite}\n@keyframes hsFloat{50%{transform:translateY(-53%) perspective(1200px) rotateY(-9deg) rotateX(3deg)}}\n.hero-banners .dots button{width:9px;height:9px}\n@media(max-width:800px){\n  .hero-banners .banner-track{height:auto;min-height:520px}\n  .hero-slide{grid-template-columns:1fr;padding:28px 22px 46px;gap:10px;align-content:start}\n  .hs-visual{min-height:190px;order:-1}.hs-img.k1,.hs-img.k2{display:none}.hs-img.k0{width:86%;left:7%;right:auto}\n  .hs-price{font-size:1.6rem}\n}\n/* assistente: op\u00e7\u00f5es, abas e barra de voz ao vivo (estilo Gemini/Uhull) */\n.bot-opts{padding:10px 12px 6px;border-bottom:1px solid var(--line,rgba(255,255,255,.08));display:grid;gap:8px}\n.bot-tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:rgba(255,255,255,.05);padding:4px;border-radius:12px}\n.bot-tabs button{border:0;border-radius:9px;padding:9px 6px;font:700 .85rem Inter,sans-serif;color:inherit;background:transparent;cursor:pointer}\n.bot-tabs button[aria-selected=true]{background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;box-shadow:0 6px 16px rgba(79,70,229,.35)}\n.bot-row{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:.82rem}\n.bot-sw{display:flex;align-items:center;gap:8px;cursor:pointer}.bot-sw input{position:absolute;opacity:0}\n.bot-sw span{width:34px;height:20px;border-radius:99px;background:rgba(148,163,184,.4);position:relative;transition:.2s}\n.bot-sw span::after{content:\"\";position:absolute;width:16px;height:16px;border-radius:50%;background:#fff;top:2px;left:2px;transition:.2s}\n.bot-sw input:checked+span{background:#22c55e}.bot-sw input:checked+span::after{left:16px}\n.bot-vsel{border:1px solid rgba(148,163,184,.35);background:transparent;color:inherit;border-radius:9px;padding:6px 8px;font:600 .8rem Inter,sans-serif}\n.bot-vsel option{color:#0f172a}\n.vbar{position:fixed;z-index:9999;top:12px;left:50%;transform:translateX(-50%);width:min(560px,calc(100vw - 20px));display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:22px;\n  background:linear-gradient(135deg,rgba(17,20,48,.94),rgba(35,24,78,.94));border:1px solid rgba(139,92,246,.35);box-shadow:0 18px 50px rgba(0,0,0,.45),0 0 40px rgba(124,58,237,.25);backdrop-filter:blur(14px);color:#fff;animation:vbIn .35s cubic-bezier(.2,.9,.3,1.2)}\n.vbar[hidden]{display:none}\n@keyframes vbIn{from{opacity:0;transform:translate(-50%,-20px) scale(.96)}}\n.vb-orb{display:flex;flex-direction:column;align-items:center;flex:none}\n.vbar .vs{width:68px;height:68px;cursor:pointer;border-radius:50%}\n.vbar .vs-st{font:600 .68rem/1 Inter,sans-serif;color:#a5b4fc;margin-top:2px}\n.vbar[data-m=listen] .vs-st{color:#4ade80}.vbar[data-m=speak] .vs-st{color:#c4b5fd}.vbar[data-m=think] .vs-st{color:#fbbf24}\n.vbar .vs-tx{flex:1;margin:0;font:500 .95rem/1.35 Inter,sans-serif;color:#e2e8f0;max-height:4.1em;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}\n.vbar[data-m=idle] .vs-tx{color:#94a3b8}\n.vb-btn{display:flex;gap:8px;flex:none}\n.vb-btn button{width:40px;height:40px;border-radius:50%;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);color:#fff;font-size:1.05rem;cursor:pointer;display:grid;place-items:center}\n.vb-btn button:hover{background:rgba(255,255,255,.16)}\n.vb-btn .end{background:#ef4444;border-color:#ef4444}.vb-btn .end:hover{background:#dc2626}\n.bot.voice .orb{box-shadow:0 0 0 4px rgba(34,197,94,.45)}\n@media(max-width:560px){.vbar{top:8px;gap:8px;padding:8px 10px}.vbar .vs{width:56px;height:56px}.vb-btn button{width:36px;height:36px}.vbar .vs-tx{font-size:.88rem}}\n\n.bot-ic.rec{background:#ef4444!important;color:#fff;animation:recP 1s infinite}@keyframes recP{50%{box-shadow:0 0 0 6px rgba(239,68,68,.25)}}\n.vbar[data-m=idle] .vs{animation:vsHint 2.4s ease-in-out infinite}@keyframes vsHint{50%{transform:scale(1.07)}}";
+// Assistente virtual da Office BIM — o mesmo assistente Gemini da BIM CURSOS (voz ao vivo, narração, áudio, fotos e orçamento).
+// Gerado a partir de bimcursos/site/public/assets/app.js. Fala com a Edge Function "assistente" (site: 'obim').
 (() => {
-  const FN = 'https://qjunaahcantfiscligvs.supabase.co/functions/v1/assistente';
-  const KEY = 'sb_publishable_IeLlzcOWO7bc6eUyhvnMWg_jtEbMh32';
-  const WA = 'https://wa.me/5593991863444';
+  if (window.__obBot) return; window.__obBot = 1;
+  const FN = 'https://qjunaahcantfiscligvs.supabase.co/functions/v1/assistente', KEY = 'sb_publishable_IeLlzcOWO7bc6eUyhvnMWg_jtEbMh32';
+  const SITE = { whatsapp: '5593991863444' };
+  const $ = (s, el = document) => el.querySelector(s), $$ = (s, el = document) => [...el.querySelectorAll(s)];
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const box = document.createElement('div'); box.className = 'ob-bot';
-  box.innerHTML = `<button class="ob-orb" aria-label="Abrir assistente Office BIM"><span class="ob-core"></span><span class="ob-glow"></span><span class="ob-tip">Orçamento ou dúvida? Fale comigo</span></button>
-  <section class="ob-win" hidden role="dialog" aria-label="Assistente Office BIM"><header><span class="ob-orb mini"><span class="ob-core"></span></span><div><b>Assistente Office BIM</b><span>Edificações e Infraestrutura · responde na hora</span></div><button class="ob-x" aria-label="Fechar">×</button></header>
-  <div class="ob-log"><p class="ob-m a">Olá! 👷 Sou o assistente da Office BIM. Posso ajudar com projetos de loteamentos, edificações, rodovias, topografia, orçamento 5D e parcerias. Fale, digite ou mande um arquivo.</p></div>
-  <div class="ob-sug"><button>Quero orçamento de um loteamento</button><button>Como funciona a parceria de 30%?</button><button>Vocês fazem topografia para cartório?</button></div>
-  <div class="ob-files"></div>
-  <form class="ob-f"><button type="button" class="ob-ic" data-k="file" aria-label="Anexar arquivo">📎</button><input type="file" accept="image/png,image/jpeg,image/webp,application/pdf" hidden multiple><input name="q" placeholder="Digite ou fale…" autocomplete="off" maxlength="800"><button type="button" class="ob-ic" data-k="mic" aria-label="Falar">🎤</button><button class="ob-send" aria-label="Enviar">➤</button></form>
-  <a class="ob-h" href="${WA}" target="_blank" rel="noopener">Falar com o engenheiro no WhatsApp</a></section>`;
-  const css = document.createElement('style'); css.textContent = `
-  .ob-bot{position:fixed;right:20px;bottom:90px;z-index:2147483000;font-family:Inter,system-ui,sans-serif}
-  .ob-orb{position:relative;width:60px;height:60px;border:0;border-radius:50%;padding:0;background:none;cursor:pointer;display:block}
-  .ob-core{position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 0deg,#f59e0b,#ef4444,#7c3aed,#2563eb,#06b6d4,#f59e0b);animation:obSpin 6s linear infinite;box-shadow:inset 0 0 18px rgba(255,255,255,.5)}
-  .ob-core:after{content:"";position:absolute;inset:7px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,rgba(255,255,255,.25) 35%,rgba(12,12,16,.9) 75%)}
-  .ob-glow{position:absolute;inset:-10px;border-radius:50%;background:conic-gradient(#f59e0b,#7c3aed,#2563eb,#f59e0b);filter:blur(16px);opacity:.5;z-index:-1;animation:obSpin 9s linear infinite reverse}
-  .ob-bot.thinking .ob-core{animation-duration:1s}
-  .ob-tip{position:absolute;right:72px;top:50%;transform:translateY(-50%);opacity:0;white-space:nowrap;background:#fff;color:#111;font:700 13px/1 Inter,sans-serif;padding:9px 12px;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.25);transition:opacity .3s;pointer-events:none}
-  .ob-bot.hello:not(.open) .ob-tip,.ob-orb:hover .ob-tip{opacity:1}
-  @keyframes obSpin{to{transform:rotate(360deg)}}
-  .ob-orb.mini{width:34px;height:34px;pointer-events:none;flex:none}.ob-orb.mini .ob-core:after{inset:5px}
-  .ob-win{position:absolute;right:0;bottom:74px;width:min(370px,calc(100vw - 28px));height:min(540px,72vh);display:flex;flex-direction:column;background:#0e0f13;color:#f1f5f9;border:1px solid #262a33;border-radius:18px;box-shadow:0 24px 70px rgba(0,0,0,.55);overflow:hidden}
-  .ob-win[hidden]{display:none}
-  .ob-win header{position:relative;display:flex;align-items:center;gap:10px;padding:12px 40px 12px 14px;background:linear-gradient(135deg,#1f2937,#111827);border-bottom:2px solid #f59e0b}.ob-win header div{display:flex;flex-direction:column}.ob-win header span{font-size:11px;opacity:.75}
-  .ob-x{position:absolute;right:10px;top:10px;border:0;background:none;color:#fff;font-size:22px;cursor:pointer}
-  .ob-log{flex:1;overflow:auto;padding:14px;display:flex;flex-direction:column;gap:8px}
-  .ob-m{margin:0;max-width:88%;padding:9px 12px;border-radius:14px;font-size:14px;line-height:1.45;word-break:break-word}.ob-m.a{background:#1c1f26;border-bottom-left-radius:4px}.ob-m.u{align-self:flex-end;background:#f59e0b;color:#111;border-bottom-right-radius:4px}.ob-m a{color:#fbbf24}.ob-m.u a{color:#111}
-  .ob-m.typing{opacity:.6}
-  .ob-sug{display:flex;flex-wrap:wrap;gap:6px;padding:0 14px 10px}.ob-sug button{border:1px solid #333;background:transparent;color:#e5e7eb;border-radius:999px;padding:6px 10px;font-size:12px;cursor:pointer}.ob-sug button:hover{border-color:#f59e0b}
-  .ob-files{display:flex;flex-wrap:wrap;gap:6px;padding:0 12px}.ob-files span{font-size:11px;background:#292524;padding:4px 8px;border-radius:8px}
-  .ob-f{display:flex;gap:6px;align-items:center;padding:10px;border-top:1px solid #262a33}.ob-f input[name=q]{flex:1;min-width:0;border:1px solid #333;background:#0b0c0f;color:#f1f5f9;border-radius:999px;padding:10px 14px;font:inherit;font-size:14px}
-  .ob-ic{width:36px;height:36px;border:0;border-radius:50%;background:#1c1f26;cursor:pointer;font-size:15px;flex:none}.ob-ic.rec{background:#ef4444}
-  .ob-send{width:40px;height:40px;border:0;border-radius:50%;background:#f59e0b;color:#111;font-weight:900;cursor:pointer;flex:none}
-  .ob-h{display:block;text-align:center;font-size:12px;padding:0 0 10px;color:#fbbf24}
-  @media(max-width:700px){.ob-bot{right:14px;bottom:84px}}
-  @media (prefers-reduced-motion:reduce){.ob-core,.ob-glow{animation:none}}`;
-  document.head.append(css); document.body.append(box);
-  const $ = (s) => box.querySelector(s); const win = $('.ob-win'), log = $('.ob-log'), f = $('.ob-f'), fin = $('input[type=file]'), chips = $('.ob-files');
-  const hist = []; let files = [];
-  const fmt = (t) => esc(t).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/(https?:\/\/[^\s<)]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>').replace(/\n/g, '<br>');
-  const add = (role, text) => { const p = document.createElement('p'); p.className = 'ob-m ' + (role === 'user' ? 'u' : 'a'); p.innerHTML = fmt(text); log.append(p); log.scrollTop = log.scrollHeight; return p; };
-  const ask = async (q) => { q = q.trim(); if (!q && !files.length) return; $('.ob-sug')?.remove();
-    add('user', q || '📎 arquivo enviado'); hist.push({ role: 'user', content: q || 'Analise o arquivo enviado.' });
-    const sf = files; files = []; chips.innerHTML = ''; const w = add('assistant', '…'); w.classList.add('typing'); box.classList.add('thinking');
-    let r = ''; try { const res = await fetch(FN, { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: KEY }, body: JSON.stringify({ site: 'obim', messages: hist, files: sf }) }); r = (await res.json()).reply; } catch (e) {}
-    r = r || `Não consegui responder agora. Fale com o engenheiro: ${WA}`; w.remove(); box.classList.remove('thinking'); add('assistant', r); hist.push({ role: 'assistant', content: r }); };
-  const open = (v) => { win.hidden = !v; box.classList.toggle('open', v); if (v) setTimeout(() => f.q.focus(), 50); };
-  $('.ob-orb').onclick = () => open(win.hidden); $('.ob-x').onclick = () => open(false);
-  box.querySelectorAll('.ob-sug button').forEach((b) => (b.onclick = () => ask(b.textContent)));
-  f.onsubmit = (e) => { e.preventDefault(); const q = f.q.value; f.q.value = ''; ask(q); };
-  $('[data-k=file]').onclick = () => fin.click();
-  fin.onchange = async () => { for (const file of [...fin.files].slice(0, 3)) { if (file.size > 4e6) { add('assistant', `O arquivo ${file.name} passa de 4 MB.`); continue; }
-    const data = await new Promise((res) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1]); r.readAsDataURL(file); });
-    files.push({ mime: file.type, data }); const c = document.createElement('span'); c.textContent = '📎 ' + file.name; chips.append(c); } fin.value = ''; };
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition; const mic = $('[data-k=mic]');
-  if (!SR) mic.hidden = true; else { let rec = null; mic.onclick = () => { if (rec) { rec.stop(); return; } rec = new SR(); rec.lang = 'pt-BR'; rec.interimResults = true; mic.classList.add('rec');
-    rec.onresult = (e) => { f.q.value = [...e.results].map((x) => x[0].transcript).join(''); }; rec.onend = () => { mic.classList.remove('rec'); rec = null; if (f.q.value.trim()) f.requestSubmit(); }; rec.start(); }; }
-  setTimeout(() => box.classList.add('hello'), 5000); setTimeout(() => box.classList.remove('hello'), 12000);
+  const sb = { functions: { invoke: async (_n, { body }) => { try { const r = await fetch(FN, { method: 'POST', headers: { 'content-type': 'application/json', apikey: KEY }, body: JSON.stringify({ ...body, site: 'obim' }) }); return { data: await r.json() }; } catch (e) { return { data: null }; } } } };
+  const sty = document.createElement('style'); sty.textContent = CSS; document.head.append(sty);
+
+  const VOZES = [['Kore', 'Feminina'], ['Aoede', 'Feminina suave'], ['Charon', 'Masculina'], ['Puck', 'Masculina jovem']];
+  const pref = (() => { try { return JSON.parse(localStorage.getItem('bot-pref') || '{}'); } catch (e) { return {}; } })();
+  let voz = pref.voz || 'Kore', narrar = pref.narrar !== false;
+  const save = () => { try { localStorage.setItem('bot-pref', JSON.stringify({ voz, narrar })); } catch (e) {} };
+  const box = document.createElement('div'); box.className = 'bot';
+  box.innerHTML = `<button class="orb" aria-label="Abrir assistente Office BIM" title="Tire suas dúvidas com o assistente"><span class="orb-core"></span><span class="orb-glow"></span><span class="orb-tip">Toque e fale comigo 🎙️</span></button>
+    <section class="bot-win" hidden role="dialog" aria-label="Assistente Office BIM"><header><span class="orb mini"><span class="orb-core"></span></span><div><b>Assistente Office BIM</b><span>projetos · orçamentos · fala e ouve</span></div><button class="bot-x" aria-label="Fechar">×</button></header>
+    <div class="bot-opts"><div class="bot-tabs" role="tablist"><button type="button" data-t="voz" role="tab">🎙️ Conversar por voz</button><button type="button" data-t="txt" role="tab">⌨️ Texto</button></div>
+      <div class="bot-row"><label class="bot-sw"><input type="checkbox" class="bot-narr"><span></span> Narrar respostas</label><select class="bot-vsel" aria-label="Escolher voz">${VOZES.map(([v, n]) => `<option value="${v}">${n}</option>`).join('')}</select></div></div>
+    <div class="bot-log"><p class="bot-m a">Olá! 👷 Sou o assistente da Office BIM. Monto o orçamento prévio do seu projeto na hora, tiro dúvidas sobre loteamentos, edificações, topografia e BIM, e também sobre os cursos da BIM CURSOS. Fale comigo 🎙️, digite ou mande foto/planta 📷.</p></div>
+    <div class="bot-sug"><button>Quero um orçamento de projeto</button><button>Orçamento de loteamento</button><button>Como funciona a parceria de 30%?</button><button>Cursos da BIM CURSOS</button></div>
+    <div class="bot-files"></div>
+    <form class="bot-f"><button type="button" class="bot-ic" data-k="file" aria-label="Anexar arquivo" title="Anexar print ou PDF">📎</button><button type="button" class="bot-ic" data-k="cam" aria-label="Tirar foto" title="Tirar foto">📷</button><input type="file" accept="image/png,image/jpeg,image/webp,application/pdf" hidden multiple><input type="file" data-cam accept="image/*" capture="environment" hidden><input name="q" placeholder="Digite sua dúvida…" autocomplete="off" maxlength="800"><button type="button" class="bot-ic" data-k="mic" aria-label="Gravar mensagem de áudio" title="Gravar áudio e enviar">🎤</button><button class="bot-send" aria-label="Enviar">➤</button></form>
+    <a class="bot-h" href="https://wa.me/${SITE.whatsapp}" target="_blank" rel="noopener">Prefere falar com uma pessoa? WhatsApp</a></section>
+    <div class="bot-voice vbar" hidden role="dialog" aria-label="Conversa por voz"><div class="vb-orb"><canvas class="vs" width="160" height="160" title="Toque para falar"></canvas><small class="vs-st">Toque</small></div>
+      <p class="vs-tx">Pode falar…</p>
+      <div class="vb-btn"><button type="button" data-v="txt" title="Abrir conversa escrita" aria-label="Abrir conversa escrita">💬</button><button type="button" data-v="voz" title="Trocar voz" aria-label="Trocar voz"></button><button type="button" data-v="end" class="end" title="Encerrar" aria-label="Encerrar conversa por voz">✕</button></div></div>`;
+  document.body.append(box);
+  const win = $('.bot-win', box), log = $('.bot-log', box), f = $('.bot-f', box), fin = $('input[type=file]', f), chips = $('.bot-files', box);
+  const vsel = $('.bot-vsel', box), narr = $('.bot-narr', box); vsel.value = voz; narr.checked = narrar;
+  vsel.onchange = () => { voz = vsel.value; save(); unlock(); say('Oi! Esta é a minha voz. Pode falar comigo.'); };
+  narr.onchange = () => { narrar = narr.checked; save(); if (!narrar) hush(); };
+  const ss = (k, v) => { try { if (v === undefined) return JSON.parse(sessionStorage.getItem(k) || 'null'); sessionStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+  const hist = ss('bot-hist') || []; let files = [], vmode = false;
+  const fmt = (t) => esc(t).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/(https?:\/\/[^\s<)]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>').replace(/(^|\s)(\/[a-z][\w\-\/]*\/?)/g, '$1<a href="$2">$2</a>').replace(/\n/g, '<br>');
+  const IR = /\[\[ir:(\/[^\]\s]*)\]\]/;
+  const add = (role, text) => { text = String(text).replace(IR, '').trim(); const p = document.createElement('p'); p.className = 'bot-m ' + (role === 'user' ? 'u' : 'a'); p.innerHTML = fmt(text); log.append(p); log.scrollTop = log.scrollHeight; return p; };
+
+  // ---- Áudio: voz do Gemini (feminina/masculina) tocada pelo WebAudio; se falhar, usa a voz do navegador ----
+  let ac = null, out = null, src = null, an = null, buf = null, stopSay = null;
+  const unlock = () => { try { if (!ac) { ac = new (window.AudioContext || window.webkitAudioContext)(); out = ac.createAnalyser(); out.fftSize = 64; out.connect(ac.destination); } ac.resume(); } catch (e) {} };
+  const hush = () => { try { stopSay?.(); } catch (e) {} stopSay = null; try { speechSynthesis.cancel(); } catch (e) {} };
+  const falavel = (t) => { let s = t.replace(/https?:\/\/\S+/g, '').replace(/(^|\s)\/[a-z][\w\-\/]*\/?/g, ' ').replace(/[*#_`>|]/g, '').replace(/[\u{1F000}-\u{1FFFF}☀-➿️]/gu, '').replace(/\s+\n/g, '\n').trim();
+    if (s.length > 480) { const first = s.split(/\n/).find((x) => x.trim().length > 20) || s; s = first.slice(0, 420).replace(/[^.!?]*$/, '') || first.slice(0, 400); s += ' Deixei os detalhes escritos no chat.'; } return s; };
+  const browserSay = (t) => new Promise((res) => { try { const u = new SpeechSynthesisUtterance(t); u.lang = 'pt-BR'; u.rate = 1.03; const fem = !/Charon|Puck/.test(voz);
+      const vs = speechSynthesis.getVoices().filter((x) => /pt(-|_)BR/i.test(x.lang)); const v = vs.find((x) => (fem ? /fem|luciana|francisca|maria|vit[oó]ria|google/i : /masc|daniel|antonio|ant[oô]nio|felipe|male/i).test(x.name)) || vs[0];
+      if (v) u.voice = v; u.onend = res; u.onerror = res; speechSynthesis.cancel(); speechSynthesis.speak(u); stopSay = () => { speechSynthesis.cancel(); res(); }; } catch (e) { res(); } });
+  const say = async (t) => { hush(); const txt = falavel(t); if (!txt) return; unlock(); speaking(true);
+    try { const { data } = await sb.functions.invoke('assistente', { body: { tts: txt, voice: voz } });
+      if (!data?.audio || !ac) throw 0; const raw = atob(data.audio), n = raw.length >> 1, rate = +(/rate=(\d+)/.exec(data.mime || '') || [0, 24000])[1];
+      const ab = ac.createBuffer(1, n, rate), ch = ab.getChannelData(0); for (let i = 0; i < n; i++) { let v = raw.charCodeAt(2 * i) | (raw.charCodeAt(2 * i + 1) << 8); if (v > 32767) v -= 65536; ch[i] = v / 32768; }
+      await new Promise((res) => { src = ac.createBufferSource(); src.buffer = ab; src.connect(out); src.onended = res; stopSay = () => { try { src.stop(); } catch (e) {} res(); }; an = out; buf = new Uint8Array(out.frequencyBinCount); src.start(); });
+    } catch (e) { await browserSay(txt); }
+    an = null; speaking(false); };
+  const speaking = (v) => { box.classList.toggle('speaking', v); if (vmode) setMode(v ? 'speak' : 'idle', v ? 'Falando…' : 'Toque'); };
+
+  const ask = async (q, voiced) => { q = q.trim(); if (!q && !files.length) return; $('.bot-sug', box)?.remove(); hush();
+    add('user', q || '📎 arquivo enviado'); hist.push({ role: 'user', content: q || 'Analise o arquivo enviado e me ajude.' });
+    const sendFiles = files; files = []; chips.innerHTML = '';
+    const w = add('assistant', '…'); w.classList.add('typing'); box.classList.add('thinking');
+    const { data } = await sb.functions.invoke('assistente', { body: { messages: hist, files: sendFiles, voice: !!voiced } }).catch(() => ({}));
+    const full = data?.reply || 'Não consegui responder agora. Fale com a equipe pelo WhatsApp.', go = (IR.exec(full) || [])[1], r = full.replace(IR, '').trim();
+    w.remove(); box.classList.remove('thinking'); add('assistant', r); hist.push({ role: 'assistant', content: r }); ss('bot-hist', hist.slice(-16));
+    if (voiced) vtx.textContent = falavel(r).slice(0, 260);
+    if (narrar || voiced) await say(r);
+    if (go) window.open('https://bimcursos.com' + go, '_blank', 'noopener'); return r; };
+  hist.forEach((m) => add(m.role, m.content));
+  const open = (v) => { win.hidden = !v; box.classList.toggle('open', v); if (v) { unlock(); if (!vmode) setTimeout(() => f.q.focus(), 50); } else { hush(); voiceOn(false); } };
+  $('.orb', box).onclick = () => { unlock(); if (vmode) { voiceOn(false); return; } if (!win.hidden) { open(false); return; } voiceOn(true); };
+  $('.bot-x', box).onclick = () => open(false);
+  $$('.bot-sug button', box).forEach((b) => (b.onclick = () => { unlock(); ask(b.textContent); }));
+  f.onsubmit = (e) => { e.preventDefault(); unlock(); const q = f.q.value; f.q.value = ''; ask(q); };
+  $('[data-k=file]', f).onclick = () => fin.click();
+  fin.onchange = async () => { for (const file of [...fin.files].slice(0, 3)) { if (file.size > 4e6) { add('assistant', `O arquivo ${file.name} passa de 4 MB. Mande um menor.`); continue; }
+      const data = await new Promise((res) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1]); r.readAsDataURL(file); });
+      files.push({ mime: file.type, data, name: file.name }); const c = document.createElement('span'); c.textContent = '📎 ' + file.name; chips.append(c); } fin.value = ''; };
+  const camIn = $('input[data-cam]', f); $('[data-k=cam]', f).onclick = () => camIn.click();
+  camIn.onchange = () => { fin.files = camIn.files; fin.onchange(); };
+
+  // ---- Modo voz: esfera de pontos que reage à sua voz (ouvindo) e à voz do assistente (falando); conversa contínua ----
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const vbox = $('.bot-voice', box), cv = $('.vs', box), st = $('.vs-st', box), vtx = $('.vs-tx', box), ctx = cv.getContext('2d');
+  let level = 0, mode = 'idle', raf = 0, rec = null, stream = null, mic = null, mbuf = null;
+  const pts = Array.from({ length: 260 }, (_, i) => { const y = 1 - (i / 259) * 2, r = Math.sqrt(1 - y * y), t = i * 2.39996; return [Math.cos(t) * r, y, Math.sin(t) * r]; });
+  const draw = (tm) => { const W = cv.width, R = W * .3; ctx.clearRect(0, 0, W, W); const A = mic || an, B = mic ? mbuf : buf;
+    if (A && B) { A.getByteFrequencyData(B); level = level * .6 + (B.reduce((x, y) => x + y, 0) / B.length / 80) * .4; }
+    else level = level * .9 + (mode === 'think' ? .12 : .04) * .1;
+    const rot = tm / (mode === 'think' ? 600 : 2400), k = 1 + Math.min(level, 1.2) * .28, hue = mode === 'listen' ? 160 : mode === 'speak' ? 265 : 215;
+    for (const [x, y, z] of pts) { const cx = x * Math.cos(rot) - z * Math.sin(rot), cz = x * Math.sin(rot) + z * Math.cos(rot), wob = 1 + Math.sin(tm / 160 + y * 6) * level * .06;
+      const sc = (cz + 2) / 3, px = W / 2 + cx * R * k * wob, py = W / 2 + y * R * k * wob;
+      ctx.beginPath(); ctx.arc(px, py, 1.1 + sc * 2.7, 0, 6.283); ctx.fillStyle = `hsla(${hue + cz * 35 + level * 40},90%,${55 + sc * 20}%,${.22 + sc * .78})`; ctx.fill(); }
+    ctx.beginPath(); ctx.arc(W / 2, W / 2, R * 1.32 * k, 0, 6.283); ctx.strokeStyle = `hsla(${hue},80%,60%,${.3 + level * .45})`; ctx.lineWidth = 3; ctx.stroke();
+    raf = requestAnimationFrame(draw); };
+  const setMode = (m, t) => { mode = m; st.textContent = t; vbox.dataset.m = m; };
+  const stopMic = () => { try { stream?.getTracks().forEach((t) => t.stop()); } catch (e) {} stream = null; mic = null; };
+  const listen = async () => { unlock(); if (mode === 'speak') { hush(); }
+    if (!SR) { setMode('idle', 'Sem voz'); vtx.textContent = 'Seu navegador não reconhece voz. Use o Chrome ou toque em 💬 para digitar.'; return; }
+    if (rec) { rec.stop(); return; }
+    try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); mic = ac.createAnalyser(); mic.fftSize = 64; mbuf = new Uint8Array(mic.frequencyBinCount); ac.createMediaStreamSource(stream).connect(mic); } catch (e) {}
+    rec = new SR(); rec.lang = 'pt-BR'; rec.interimResults = true; let said = ''; setMode('listen', 'Sua vez'); vtx.textContent = 'Pode falar…';
+    rec.onresult = (e) => { said = [...e.results].map((r) => r[0].transcript).join(''); vtx.textContent = said; };
+    rec.onerror = () => {};
+    rec.onend = async () => { rec = null; stopMic(); if (!said.trim()) { setMode('idle', 'Toque'); vtx.textContent = 'Toque na esfera e fale'; return; }
+      setMode('think', 'Pensando…'); const r = await ask(said, true);
+      if (r && vmode && !box.dataset.stop) setTimeout(listen, 350); };
+    delete box.dataset.stop; rec.start(); };
+  const vbtn = $('[data-v=voz]', box), showVoz = () => { const fem = !/Charon|Puck/.test(voz); vbtn.textContent = fem ? '👩' : '👨'; vbtn.title = 'Voz: ' + (VOZES.find((x) => x[0] === voz) || [, ''])[1] + ' (toque para trocar)'; }; showVoz();
+  vbtn.onclick = () => { unlock(); const i = VOZES.findIndex((x) => x[0] === voz); voz = VOZES[(i + 1) % VOZES.length][0]; vsel.value = voz; save(); showVoz(); say('Oi, esta é a voz ' + VOZES.find((x) => x[0] === voz)[1].toLowerCase() + '.'); };
+  vsel.addEventListener('change', showVoz);
+  const voiceOn = (v) => { vmode = v; vbox.hidden = !v; box.classList.toggle('voice', v); if (v) { win.hidden = true; box.classList.remove('open'); }
+    $$('.bot-tabs button', box).forEach((b) => b.setAttribute('aria-selected', String((b.dataset.t === 'voz') === v)));
+    cancelAnimationFrame(raf); if (v) { setMode('idle', 'Toque'); vtx.textContent = 'Toque na esfera e fale'; raf = requestAnimationFrame(draw); } else { box.dataset.stop = 1; rec?.stop(); stopMic(); } };
+  cv.onclick = () => { delete box.dataset.stop; listen(); };
+  $('[data-v=end]', box).onclick = () => { box.dataset.stop = 1; rec?.stop(); hush(); voiceOn(false); };
+  $('[data-v=txt]', box).onclick = () => { voiceOn(false); open(true); };
+  // 🎤 na caixa de texto = mensagem de áudio (grava, transcreve e envia como mensagem escrita)
+  let dic = null; const micB = $('[data-k=mic]', f);
+  micB.onclick = () => { unlock(); if (dic) { dic.stop(); return; } if (!SR) { add('assistant', 'Seu navegador não grava áudio aqui. Use o Chrome ou digite.'); return; }
+    hush(); dic = new SR(); dic.lang = 'pt-BR'; dic.interimResults = true; dic.continuous = true; let said = ''; micB.classList.add('rec'); f.q.placeholder = 'Gravando… toque 🎤 de novo para enviar';
+    dic.onresult = (e) => { said = [...e.results].map((r) => r[0].transcript).join(''); f.q.value = said; };
+    dic.onend = () => { dic = null; micB.classList.remove('rec'); f.q.placeholder = 'Digite sua dúvida…'; const q = f.q.value.trim(); f.q.value = ''; if (q) ask('🎤 ' + q); };
+    dic.onerror = () => {}; dic.start(); };
+  // escrever encerra a conversa por voz
+  f.q.addEventListener('input', () => { if (vmode) voiceOn(false); });
+  $$('.bot-tabs button', box).forEach((b) => (b.onclick = () => { unlock(); if (b.dataset.t === 'voz') { voiceOn(true); listen(); } else f.q.focus(); }));
+  $$('.bot-tabs button', box)[1].setAttribute('aria-selected', 'true');
+  const resume = ss('bot-resume'); if (resume) { sessionStorage.removeItem('bot-resume'); if (resume === 'voz') { voiceOn(true); vtx.textContent = 'Pronto, abri a página. Toque na esfera para continuar.'; } else open(true); }
+  setTimeout(() => box.classList.add('hello'), 4000); setTimeout(() => box.classList.remove('hello'), 11000);
 })();
