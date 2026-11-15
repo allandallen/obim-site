@@ -29,13 +29,15 @@ header{background:rgba(5,8,18,.72)!important;backdrop-filter:blur(14px) saturate
 /* botões */
 main a[href*="wa.me"],header a[href*="wa.me"],main .bg-accent,header .bg-accent{background:linear-gradient(135deg,#ff6a00,#ff9a3c)!important;color:#fff!important;border:0!important;border-radius:999px!important;box-shadow:0 12px 30px rgba(255,106,0,.35);transition:transform .2s,box-shadow .2s}
 main a[href*="wa.me"]:hover,header a[href*="wa.me"]:hover,main .bg-accent:hover{transform:translateY(-2px);box-shadow:0 18px 40px rgba(255,106,0,.5)}
-main a.border,main button.border{border-radius:999px!important;border-color:rgba(255,255,255,.22)!important;backdrop-filter:blur(8px)}
+main a.inline-flex.border,main button.inline-flex.border:not(.flex-col){border-radius:999px!important;border-color:rgba(255,255,255,.22)!important;backdrop-filter:blur(8px)}
+main button.group.flex-col{border-radius:18px!important;background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.015))!important;border-color:rgba(255,255,255,.08)!important;transition:transform .35s cubic-bezier(.2,.8,.2,1),box-shadow .35s,border-color .35s}
+main button.group.flex-col:hover{transform:translateY(-6px);border-color:rgba(255,138,42,.55)!important;box-shadow:0 24px 60px rgba(0,0,0,.45),0 0 50px rgba(255,106,0,.15)}
 .text-accent{color:#ff8a2a!important}
 /* números */
 main>section:nth-of-type(3){background:linear-gradient(90deg,rgba(255,106,0,.08),rgba(14,165,233,.08))!important}
 main>section:nth-of-type(3) dd{font-size:clamp(1.6rem,2.8vw,2.4rem)!important;background:linear-gradient(90deg,#fff,#ffb547);-webkit-background-clip:text;background-clip:text;color:transparent}
 /* cartões e imagens */
-main article,main li,.rounded-lg,.rounded-md,.rounded-xl{border-radius:18px!important}
+main article,.rounded-lg,.rounded-xl{border-radius:18px!important}
 main article,main .border.bg-card,main .bg-card{background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.015))!important;border:1px solid rgba(255,255,255,.08)!important;transition:transform .35s cubic-bezier(.2,.8,.2,1),box-shadow .35s,border-color .35s}
 main article:hover,main .bg-card:hover{transform:translateY(-6px);border-color:rgba(255,138,42,.55)!important;box-shadow:0 24px 60px rgba(0,0,0,.45),0 0 0 1px rgba(255,138,42,.25),0 0 50px rgba(255,106,0,.15)}
 main article img{transition:transform .8s cubic-bezier(.2,.8,.2,1)}main article:hover img{transform:scale(1.06)}
@@ -70,7 +72,7 @@ main h2{font-size:clamp(1.9rem,3.6vw,3.1rem)!important;line-height:1.08!importan
     // WhatsApp flutuante sai do canto (o assistente fica lá); o contato continua no topo, nos botões e no rodapé
     document.querySelectorAll('a[href*="wa.me"],a[href*="whatsapp"]').forEach((a) => { if (a.closest('header,.bot')) return; let e = a; while (e && e !== document.body) { if (getComputedStyle(e).position === 'fixed') { e.style.display = 'none'; break; } e = e.parentElement; } });
     // entrada suave ao rolar
-    if (io) main.querySelectorAll(':scope > section:not(#top) h2, :scope > section article, :scope > section dl > div').forEach((el) => { if (!el.classList.contains('ob-rv')) { el.classList.add('ob-rv'); io.observe(el); } });
+    if (io) main.querySelectorAll(':scope > section:not(#top) h2, :scope > section article, :scope > section button.group.flex-col, :scope > section dl > div').forEach((el) => { if (!el.classList.contains('ob-rv')) { el.classList.add('ob-rv'); io.observe(el); } });
     return true;
   };
   let n = 0; const t = setInterval(() => { if (enhance() || ++n > 40) clearInterval(t); }, 250);
