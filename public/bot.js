@@ -128,6 +128,7 @@ ${p.prazo ? `<div class="box"><h3>Prazo</h3>${esc(p.prazo)}</div>` : ''}
     if (go) window.open('https://bimcursos.com' + go, '_blank', 'noopener'); return r; };
   hist.forEach((m) => add(m.role, m.content));
   const open = (v) => { win.hidden = !v; box.classList.toggle('open', v); if (v) { unlock(); if (!vmode) setTimeout(() => f.q.focus(), 50); } else { hush(); voiceOn(false); } };
+  document.addEventListener('click', (e) => { if (e.target.closest('[data-open-bot]')) { unlock(); voiceOn(false); open(true); } });
   $('.orb', box).onclick = () => { unlock(); if (vmode) { voiceOn(false); return; } if (!win.hidden) { open(false); return; } voiceOn(true); };
   $('.bot-x', box).onclick = () => open(false);
   $$('.bot-sug button', box).forEach((b) => (b.onclick = () => { unlock(); ask(b.textContent); }));
