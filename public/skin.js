@@ -187,3 +187,13 @@ try { setTimeout(() => fetch('https://qjunaahcantfiscligvs.supabase.co/functions
   addEventListener('scroll', () => { if (tick) return; tick = true; requestAnimationFrame(() => { add(); mede(); b.classList.toggle('on', scrollY > 900); tick = false; }); }, { passive: true });
   addEventListener('resize', mede);
 })();
+
+// WhatsApp com mensagem pronta (diz de onde a pessoa veio)
+(() => { if (window.__obWaTxt) return; window.__obWaTxt = 1;
+  document.addEventListener('click', (e) => { const a = e.target.closest('a[href*="wa.me/"],a[href*="api.whatsapp.com"]'); if (!a || a.hasAttribute('data-open-bot')) return;
+    try { const u = new URL(a.href); if (u.searchParams.get('text')) return; const p = location.pathname; let t;
+      const art = a.closest('article,[id]'); const quem = art && art.querySelector('h2,h3') ? art.querySelector('h2,h3').textContent.trim().replace(/\s+/g, ' ') : '';
+      if (p.startsWith('/equipe')) t = quem && quem.length < 60 ? `Olá! Vim pelo site da Office BIM, na página da equipe, e gostaria de falar com ${quem} sobre um projeto ou serviço de engenharia.` : 'Olá! Vim pela página da equipe da Office BIM e gostaria de falar sobre um projeto, uma obra ou um serviço de topografia.';
+      else t = 'Olá! Vim pelo site da Office BIM e gostaria de um orçamento de projeto de edificações ou infraestrutura em BIM.';
+      u.searchParams.set('text', t); a.href = u.toString(); } catch {} }, true);
+})();
