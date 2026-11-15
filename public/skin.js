@@ -101,3 +101,25 @@ main h2{font-size:clamp(1.9rem,3.6vw,3.1rem)!important;line-height:1.08!importan
 
 // Acorda o assistente ao abrir o site, para a primeira resposta sair rápida
 try { setTimeout(() => fetch('https://qjunaahcantfiscligvs.supabase.co/functions/v1/assistente', { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: 'sb_publishable_IeLlzcOWO7bc6eUyhvnMWg_jtEbMh32' }, body: '{"warm":true}', keepalive: true }).catch(() => {}), 1500); } catch (e) {}
+
+// Equipe técnica: faixa na página inicial (antes do convite final) e link no rodapé
+(function equipe() {
+  const css = document.createElement('style');
+  css.textContent = `.ob-team{max-width:1120px;margin:40px auto;padding:26px 20px;border:1px solid #1e293b;border-radius:22px;background:linear-gradient(180deg,#0f172a,#0b1220);color:#e2e8f0;display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:center}
+  .ob-team h2{margin:6px 0;font-size:1.6rem}.ob-team p{color:#94a3b8;margin:0}.ob-tc{display:flex;gap:14px;align-items:center;background:#0b1220;border:1px solid #1e293b;border-radius:16px;padding:12px;text-decoration:none;color:#e2e8f0}
+  .ob-tc img,.ob-tc i{width:72px;height:72px;border-radius:14px;object-fit:cover;flex:none}.ob-tc i{display:grid;place-items:center;font-style:normal;font-weight:800;background:linear-gradient(135deg,#1d4ed8,#7c3aed)}.ob-tc b{display:block}.ob-tc small{color:#38bdf8}
+  .ob-team .lst{display:grid;gap:10px}@media(max-width:820px){.ob-team{grid-template-columns:1fr;margin:24px 12px}}`;
+  document.head.append(css);
+  const put = () => {
+    if (location.pathname !== '/' || document.querySelector('.ob-team')) return;
+    const main = document.querySelector('main'); if (!main) return; const secs = main.querySelectorAll(':scope > section, :scope > div > section'); if (secs.length < 4) return;
+    const t = document.createElement('section'); t.className = 'ob-team';
+    t.innerHTML = `<div><span class="ob-kick">05 / EQUIPE TÉCNICA</span><h2>Especialistas em BIM</h2><p>Quem coordena e assina os seus projetos: engenheiros e especialistas em BIM, com registro no CREA, BIM Managers e professores da BIM Cursos.</p><p style="margin-top:12px"><a href="/equipe" style="color:#38bdf8;font-weight:700">Ver perfis completos →</a></p></div>
+      <div class="lst"><a class="ob-tc" href="/equipe#ewerton"><img src="/ewerton.webp" alt=""><span><b>Ewerton Henrique Almeida da Silva</b><small>Engenheiro Civil · BIM Manager</small></span></a>
+      <a class="ob-tc" href="/equipe#miriam"><img src="/miriam.webp" alt=""><span><b>Miriam Mônica Viegas Miranda</b><small>Especialista em BIM e Infraestrutura</small></span></a>
+      <a class="ob-tc" href="/equipe#allan"><i>AD</i><span><b>Allan Dallen Almeida de Sousa</b><small>Engenheiro Civil · Fundador</small></span></a></div>`;
+    secs[secs.length - 1].before(t);
+  };
+  const foot = () => { const f = document.querySelector('footer'); if (f && !f.querySelector('.ob-eq')) { const a = document.createElement('a'); a.className = 'ob-eq'; a.href = '/equipe'; a.textContent = 'Equipe técnica'; a.style.cssText = 'display:block;text-align:center;color:#38bdf8;font-weight:700;padding:8px 0'; f.prepend(a); } };
+  const tick = () => { put(); foot(); }; setInterval(tick, 1500); tick();
+})();
