@@ -24,6 +24,10 @@ await writeFile('dist/equipe/index.html', await readFile('public/equipe.html'));
 await writeFile('dist/ewerton.webp', await readFile('public/ewerton.webp'));
 await writeFile('dist/miriam.webp', await readFile('public/miriam.webp'));
 await writeFile('dist/allan.webp', await readFile('public/allan.webp'));
+await writeFile('dist/adrian.webp', await readFile('public/adrian.webp'));
+// Fotos e vídeo das obras executadas
+await mkdir('dist/obras', { recursive: true });
+for (const f of await (await import('node:fs/promises')).readdir('public/obras')) await writeFile('dist/obras/' + f, await readFile('public/obras/' + f));
 // Portfólios em PDF de cada profissional
 import { readdir } from 'node:fs/promises';
 await mkdir('dist/portfolios', { recursive: true });
@@ -40,5 +44,5 @@ const idx = (await readFile('dist/index.html', 'utf8')).replace('</body>', '<scr
 await writeFile('dist/index.html', idx);
 // SPA: todas as rotas abrem o index.html
 await writeFile('dist/_redirects', '/* /index.html 200\n');
-await writeFile('dist/_headers', '/cdn/*\n  Cache-Control: public, max-age=31536000, immutable\n/assets/*\n  Cache-Control: public, max-age=31536000, immutable\n');
+await writeFile('dist/_headers', '/obras/*\n  Cache-Control: public, max-age=86400\n/cdn/*\n  Cache-Control: public, max-age=31536000, immutable\n/assets/*\n  Cache-Control: public, max-age=31536000, immutable\n');
 console.log('ok', files.length, 'arquivos');
