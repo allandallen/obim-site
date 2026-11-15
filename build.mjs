@@ -17,6 +17,7 @@ for (const f of files) {
 import { readFile } from 'node:fs/promises';
 await writeFile('dist/bot.js', await readFile('public/bot.js'));
 await writeFile('dist/skin.js', await readFile('public/skin.js'));
+await writeFile('dist/ob-simbolo.webp', await readFile('public/ob-simbolo.webp'));
 // nomes novos para JS/CSS a cada publicação (navegador nunca usa versão velha)
 import { rename } from 'node:fs/promises';
 const tag = Date.now().toString(36);
