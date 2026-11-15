@@ -58,8 +58,8 @@ main h2{font-size:clamp(1.9rem,3.6vw,3.1rem)!important;line-height:1.08!importan
 .ob-bc:hover{transform:translateY(-2px)}.ob-bc img{height:26px;width:auto}.ob-bc span{display:flex;flex-direction:column;line-height:1.05}.ob-bc small{font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:#93c5fd}.ob-bc b{font-size:.92rem}
 @media(max-width:700px){.ob-bc{padding:6px;left:12px;bottom:16px}.ob-bc span{display:none}.ob-bc img{height:30px}}
 
-.ob-wa{display:none;position:fixed;left:12px;bottom:72px;z-index:60;width:44px;height:44px;border-radius:50%;background:#16a34a;color:#fff!important;place-items:center;box-shadow:0 8px 20px rgba(0,0,0,.4)}
-@media(max-width:1023px){.ob-wa{display:grid}}
+.ob-wa{display:grid;position:fixed;left:16px;bottom:18px;z-index:60;width:44px;height:44px;border-radius:50%;background:#16a34a;color:#fff!important;place-items:center;box-shadow:0 8px 20px rgba(0,0,0,.4)}
+@media(max-width:1023px){.ob-wa{bottom:72px;left:12px}}
 @media (prefers-reduced-motion:reduce){.ob-rv{opacity:1;transform:none}#top img,.ob-marq div{animation:none}}
 `;
   const st = document.createElement('style'); st.textContent = css; document.head.append(st);
@@ -85,7 +85,7 @@ main h2{font-size:clamp(1.9rem,3.6vw,3.1rem)!important;line-height:1.08!importan
     // faixa de tecnologias depois dos números
     if (!main.querySelector('.ob-marq') && secs[2]) { const m = document.createElement('div'); m.className = 'ob-marq'; const row = TECH.map((x) => `<span>${x}</span>`).join(''); m.innerHTML = `<div>${row}${row}</div>`; secs[2].append(m); }
     // WhatsApp flutuante sai do canto (o assistente fica lá); o contato continua no topo, nos botões e no rodapé
-    document.querySelectorAll('a[href*="wa.me"],a[href*="whatsapp"]').forEach((a) => { if (a.closest('header,.bot')) return; let e = a; while (e && e !== document.body) { if (getComputedStyle(e).position === 'fixed') { e.style.display = 'none'; break; } e = e.parentElement; } });
+    document.querySelectorAll('a[href*="wa.me"],a[href*="whatsapp"]').forEach((a) => { if (a.closest('header,.bot,.ob-wa') || a.classList.contains('ob-wa')) return; let e = a; while (e && e !== document.body) { if (getComputedStyle(e).position === 'fixed') { e.style.display = 'none'; break; } e = e.parentElement; } });
     renomeia();
     // entrada suave ao rolar
     if (io) main.querySelectorAll(':scope > section:not(#top) h2, :scope > section article, :scope > section button.group.flex-col, :scope > section dl > div').forEach((el) => { if (!el.classList.contains('ob-rv')) { el.classList.add('ob-rv'); io.observe(el); } });
