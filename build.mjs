@@ -4,11 +4,14 @@ import { dirname } from 'node:path';
 const BASE = 'https://qjunaahcantfiscligvs.supabase.co/storage/v1/object/public/media/obim/';
 const { files } = await (await fetch(BASE + 'manifest.json?t=' + Date.now())).json();
 for (const f of files) {
-  const r = await fetch(BASE + 'site/' + f);
+  const r = await fetch(BASE + 'site/' + f + '?t=' + Date.now()); // evita cópia antiga em cache
   if (!r.ok) throw new Error(f + ' ' + r.status);
   const out = 'dist/' + f;
   await mkdir(dirname(out), { recursive: true });
-  await writeFile(out, Buffer.from(await r.arrayBuffer()));
+  let buf = Buffer.from(await r.arrayBuffer());
+  // imagens servidas pelo próprio site (nada mais da Hostinger)
+  if (/\.(js|css|html)$/.test(f)) buf = Buffer.from(buf.toString('utf8').split('https://horizons-cdn.hostinger.com/03404b42-3ed1-43b5-9ee2-d7aa3e65abf9').join('/cdn'));
+  await writeFile(out, buf);
 }
 // Assistente virtual (orbe) em todas as páginas
 import { readFile } from 'node:fs/promises';
