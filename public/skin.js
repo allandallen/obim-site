@@ -98,3 +98,6 @@ main h2{font-size:clamp(1.9rem,3.6vw,3.1rem)!important;line-height:1.08!importan
   let n = 0; const t = setInterval(() => { if (enhance() || ++n > 40) clearInterval(t); }, 250);
   new MutationObserver(() => { clearTimeout(window.__obT); window.__obT = setTimeout(enhance, 300); }).observe(document.documentElement, { childList: true, subtree: true });
 })();
+
+// Acorda o assistente ao abrir o site, para a primeira resposta sair rápida
+try { setTimeout(() => fetch('https://qjunaahcantfiscligvs.supabase.co/functions/v1/assistente', { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: 'sb_publishable_IeLlzcOWO7bc6eUyhvnMWg_jtEbMh32' }, body: '{"warm":true}', keepalive: true }).catch(() => {}), 1500); } catch (e) {}
