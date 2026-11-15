@@ -18,6 +18,11 @@ import { readFile } from 'node:fs/promises';
 await writeFile('dist/bot.js', await readFile('public/bot.js'));
 await writeFile('dist/skin.js', await readFile('public/skin.js'));
 await writeFile('dist/ob-simbolo.webp', await readFile('public/ob-simbolo.webp'));
+// Página da equipe técnica (perfis dos engenheiros)
+await mkdir('dist/equipe', { recursive: true });
+await writeFile('dist/equipe/index.html', await readFile('public/equipe.html'));
+await writeFile('dist/ewerton.webp', await readFile('public/ewerton.webp'));
+await writeFile('dist/miriam.webp', await readFile('public/miriam.webp'));
 // nomes novos para JS/CSS a cada publicação (navegador nunca usa versão velha)
 import { rename } from 'node:fs/promises';
 const tag = Date.now().toString(36);
