@@ -57,6 +57,9 @@ main h2{font-size:clamp(1.9rem,3.6vw,3.1rem)!important;line-height:1.08!importan
 .ob-bc{position:fixed;left:16px;bottom:18px;z-index:60;display:flex;align-items:center;gap:9px;padding:7px 14px 7px 9px;border-radius:999px;background:rgba(8,12,26,.85);border:1px solid rgba(59,130,246,.45);backdrop-filter:blur(10px);box-shadow:0 10px 30px rgba(0,0,0,.4);color:#fff!important;text-decoration:none!important;font-family:Inter,sans-serif;transition:transform .2s}
 .ob-bc:hover{transform:translateY(-2px)}.ob-bc img{height:26px;width:auto}.ob-bc span{display:flex;flex-direction:column;line-height:1.05}.ob-bc small{font-size:.6rem;letter-spacing:.1em;text-transform:uppercase;color:#93c5fd}.ob-bc b{font-size:.92rem}
 @media(max-width:700px){.ob-bc{padding:6px;left:12px;bottom:16px}.ob-bc span{display:none}.ob-bc img{height:30px}}
+
+.ob-wa{display:none;position:fixed;left:12px;bottom:72px;z-index:60;width:44px;height:44px;border-radius:50%;background:#16a34a;color:#fff!important;place-items:center;box-shadow:0 8px 20px rgba(0,0,0,.4)}
+@media(max-width:1023px){.ob-wa{display:grid}}
 @media (prefers-reduced-motion:reduce){.ob-rv{opacity:1;transform:none}#top img,.ob-marq div{animation:none}}
 `;
   const st = document.createElement('style'); st.textContent = css; document.head.append(st);
@@ -74,6 +77,9 @@ main h2{font-size:clamp(1.9rem,3.6vw,3.1rem)!important;line-height:1.08!importan
     // atalho para a escola (BIM CURSOS) no canto inferior esquerdo
     if (!document.querySelector('.ob-bc')) { const b = document.createElement('a'); b.className = 'ob-bc'; b.href = 'https://bimcursos.com'; b.target = '_blank'; b.rel = 'noopener';
       b.innerHTML = '<img src="https://bimcursos-plataforma.pages.dev/assets/brand/bimcursos-b.webp?v=4" alt=""><span><small>Nossa escola</small><b>BIM Cursos</b></span>'; document.body.append(b); }
+    // WhatsApp: um único lugar. No computador fica no topo; no celular (onde o topo esconde) vira um botão pequeno acima do atalho da escola
+    if (!document.querySelector('.ob-wa')) { const w = document.createElement('a'); w.className = 'ob-wa'; w.href = 'https://wa.me/5593991863444'; w.target = '_blank'; w.rel = 'noopener'; w.setAttribute('aria-label', 'WhatsApp Office BIM');
+      w.innerHTML = '<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm4.5 12.1c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.6.1-.7.8-.8 1-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.3-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6.5-.1 1.5-.6 1.7-1.2s.2-1.1.2-1.2-.2-.2-.4-.3z"/></svg>'; document.body.append(w); }
     // rótulos "01 / SOBRE..." viram etiquetas
     main.querySelectorAll('p,span,div').forEach((el) => { if (el.children.length === 0 && /^\d{2} \/ /.test(el.textContent.trim()) && !el.classList.contains('ob-kick')) el.classList.add('ob-kick'); });
     // faixa de tecnologias depois dos números
