@@ -23,6 +23,7 @@ await mkdir('dist/equipe', { recursive: true });
 await writeFile('dist/equipe/index.html', await readFile('public/equipe.html'));
 await writeFile('dist/ewerton.webp', await readFile('public/ewerton.webp'));
 await writeFile('dist/miriam.webp', await readFile('public/miriam.webp'));
+await writeFile('dist/allan.webp', await readFile('public/allan.webp'));
 // nomes novos para JS/CSS a cada publicação (navegador nunca usa versão velha)
 import { rename } from 'node:fs/promises';
 const tag = Date.now().toString(36);
