@@ -88,7 +88,7 @@ main h2{font-size:clamp(1.9rem,3.6vw,3.1rem)!important;line-height:1.08!importan
   // WhatsApp fica só no topo; os botões do meio da página abrem o assistente (que monta o orçamento)
   document.addEventListener('click', (e) => { const a = e.target.closest('main a[href*="wa.me"], main a[href*="whatsapp"]'); if (!a) return; e.preventDefault(); a.setAttribute('data-open-bot', ''); }, true);
   const renomeia = () => document.querySelectorAll('main a[href*="wa.me"], main a[href*="whatsapp"]').forEach((a) => { a.setAttribute('data-open-bot', '');
-    a.querySelectorAll('*').forEach(() => {}); const w = document.createTreeWalker(a, NodeFilter.SHOW_TEXT); let n; while ((n = w.nextNode())) { n.nodeValue = n.nodeValue.replace(/no whatsapp/i, 'com o assistente').replace(/falar com o comercial/i, 'Falar com o assistente').replace(/whatsapp office bim/i, 'Atendimento Office BIM'); } });
+    a.querySelectorAll('*').forEach(() => {}); const w = document.createTreeWalker(a, NodeFilter.SHOW_TEXT); let n; while ((n = w.nextNode())) { n.nodeValue = n.nodeValue.replace(/no whatsapp/i, 'com o assistente').replace(/falar com o comercial/i, 'Falar com o assistente').replace(/whatsapp office bim/i, 'Atendimento Office BIM').replace(/falar com a office bim/i, 'Falar com o assistente'); } });
   let n = 0; const t = setInterval(() => { if (enhance() || ++n > 40) clearInterval(t); }, 250);
   new MutationObserver(() => { clearTimeout(window.__obT); window.__obT = setTimeout(enhance, 300); }).observe(document.documentElement, { childList: true, subtree: true });
 })();
