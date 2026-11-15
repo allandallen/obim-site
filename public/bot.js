@@ -4,16 +4,17 @@ const CSS = ".bot{--bg2:#0e1222;--tx:#e8ecf5;--line:rgba(255,255,255,.12);--mut:
 (() => {
   if (window.__obBot) return; window.__obBot = 1;
   const FN = 'https://qjunaahcantfiscligvs.supabase.co/functions/v1/assistente', KEY = 'sb_publishable_IeLlzcOWO7bc6eUyhvnMWg_jtEbMh32';
-  const SITE = { whatsapp: '5593991863444' };
+  const SITE = { whatsapp: '5593991863444', supabaseUrl: 'https://qjunaahcantfiscligvs.supabase.co', supabaseKey: KEY, bot: 'obim', botTitle: 'Assistente Office BIM' };
   const $ = (s, el = document) => el.querySelector(s), $$ = (s, el = document) => [...el.querySelectorAll(s)];
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const sb = { functions: { invoke: async (_n, { body }) => { try { const r = await fetch(FN, { method: 'POST', headers: { 'content-type': 'application/json', apikey: KEY }, body: JSON.stringify({ ...body, site: 'obim' }) }); return { data: await r.json() }; } catch (e) { return { data: null }; } } } };
+  const sb = { functions: { invoke: async (_n, { body }) => { try { const r = await fetch(FN, { method: 'POST', headers: { 'content-type': 'application/json', apikey: KEY }, body: JSON.stringify({ ...body, site: 'obim' }) }); return { data: await r.json() }; } catch (e) { return { data: null }; } } }, auth: { getSession: async () => ({ data: { session: null } }) } };
   const sty = document.createElement('style'); sty.textContent = CSS; document.head.append(sty);
 
   const VOZES = [['Kore', 'Feminina'], ['Aoede', 'Feminina suave'], ['Charon', 'Masculina'], ['Puck', 'Masculina jovem']];
   const pref = (() => { try { return JSON.parse(localStorage.getItem('bot-pref') || '{}'); } catch (e) { return {}; } })();
   let voz = pref.voz || 'Kore', narrar = pref.narrar !== false;
   const save = () => { try { localStorage.setItem('bot-pref', JSON.stringify({ voz, narrar })); } catch (e) {} };
+  const TITULO = SITE.botTitle || 'Assistente BIM CURSOS';
   const box = document.createElement('div'); box.className = 'bot';
   box.innerHTML = `<button class="orb" aria-label="Abrir assistente Office BIM" title="Tire suas dúvidas com o assistente"><span class="orb-core"></span><span class="orb-glow"></span><span class="orb-tip">Toque e fale comigo 🎙️</span></button>
     <section class="bot-win" hidden role="dialog" aria-label="Assistente Office BIM"><header><span class="orb mini"><span class="orb-core"></span></span><div><b>Assistente Office BIM</b><span>projetos · orçamentos · fala e ouve</span></div><button class="bot-x" aria-label="Fechar">×</button></header>
@@ -24,8 +25,10 @@ const CSS = ".bot{--bg2:#0e1222;--tx:#e8ecf5;--line:rgba(255,255,255,.12);--mut:
     <div class="bot-files"></div>
     <form class="bot-f"><button type="button" class="bot-ic" data-k="file" aria-label="Anexar arquivo" title="Anexar print ou PDF">📎</button><button type="button" class="bot-ic" data-k="cam" aria-label="Tirar foto" title="Tirar foto">📷</button><input type="file" accept="image/png,image/jpeg,image/webp,application/pdf" hidden multiple><input type="file" data-cam accept="image/*" capture="environment" hidden><input name="q" placeholder="Digite sua dúvida…" autocomplete="off" maxlength="800"><button type="button" class="bot-ic" data-k="mic" aria-label="Gravar mensagem de áudio" title="Gravar áudio e enviar">🎤</button><button class="bot-send" aria-label="Enviar">➤</button></form>
     </section>
-    <div class="bot-voice vbar" hidden role="dialog" aria-label="Conversa por voz"><div class="vb-orb"><canvas class="vs" width="160" height="160" title="Toque para falar"></canvas><small class="vs-st">Toque</small></div>
-      <p class="vs-tx">Pode falar…</p>
+    <div class="bot-voice vbar" hidden role="dialog" aria-label="Conversa por voz"><div class="vb-head"><b>✨ ${TITULO}</b><button type="button" data-v="end" class="vb-close">✕ Fechar</button></div>
+      <div class="vb-orb"><canvas class="vs" width="260" height="260" title="Toque para falar"></canvas><small class="vs-st">Toque</small></div>
+      <p class="vs-tx">Pode falar…</p><button type="button" class="vb-cont" data-v="txt">💬 Continuar a conversa escrita</button>
+      <form class="vb-f"><button type="button" data-v="file" aria-label="Anexar">📎</button><button type="button" data-v="cam" aria-label="Foto">📷</button><input name="q" placeholder="Ou escreva aqui…" autocomplete="off"><button type="button" data-v="mic" aria-label="Falar">🎤</button><button aria-label="Enviar">➤</button></form>
       <div class="vb-btn"><button type="button" data-v="txt" title="Abrir conversa escrita" aria-label="Abrir conversa escrita">💬</button><button type="button" data-v="voz" title="Trocar voz" aria-label="Trocar voz"></button><button type="button" data-v="end" class="end" title="Encerrar" aria-label="Encerrar conversa por voz">✕</button></div></div>`;
   document.body.append(box);
   const win = $('.bot-win', box), log = $('.bot-log', box), f = $('.bot-f', box), fin = $('input[type=file]', f), chips = $('.bot-files', box);
@@ -42,19 +45,34 @@ const CSS = ".bot{--bg2:#0e1222;--tx:#e8ecf5;--line:rgba(255,255,255,.12);--mut:
   // ---- Áudio: voz do Gemini (feminina/masculina) tocada pelo WebAudio; se falhar, usa a voz do navegador ----
   let ac = null, out = null, src = null, an = null, buf = null, stopSay = null;
   const unlock = () => { try { if (!ac) { ac = new (window.AudioContext || window.webkitAudioContext)(); out = ac.createAnalyser(); out.fftSize = 64; out.connect(ac.destination); } ac.resume(); } catch (e) {} };
-  const hush = () => { try { stopSay?.(); } catch (e) {} stopSay = null; try { speechSynthesis.cancel(); } catch (e) {} };
+  let curStop = null;
+  const hush = () => { try { curStop?.(); } catch (e) {} curStop = null; try { stopSay?.(); } catch (e) {} stopSay = null; try { speechSynthesis.cancel(); } catch (e) {} };
   const falavel = (t) => { let s = t.replace(/https?:\/\/\S+/g, '').replace(/(^|\s)\/[a-z][\w\-\/]*\/?/g, ' ').replace(/[*#_`>|]/g, '').replace(/[\u{1F000}-\u{1FFFF}☀-➿️]/gu, '').replace(/\s+\n/g, '\n').trim();
     if (s.length > 480) { const first = s.split(/\n/).find((x) => x.trim().length > 20) || s; s = first.slice(0, 420).replace(/[^.!?]*$/, '') || first.slice(0, 400); s += ' Deixei os detalhes escritos no chat.'; } return s; };
   const browserSay = (t) => new Promise((res) => { try { const u = new SpeechSynthesisUtterance(t); u.lang = 'pt-BR'; u.rate = 1.03; const fem = !/Charon|Puck/.test(voz);
       const vs = speechSynthesis.getVoices().filter((x) => /pt(-|_)BR/i.test(x.lang)); const v = vs.find((x) => (fem ? /fem|luciana|francisca|maria|vit[oó]ria|google/i : /masc|daniel|antonio|ant[oô]nio|felipe|male/i).test(x.name)) || vs[0];
       if (v) u.voice = v; u.onend = res; u.onerror = res; speechSynthesis.cancel(); speechSynthesis.speak(u); stopSay = () => { speechSynthesis.cancel(); res(); }; } catch (e) { res(); } });
-  const say = async (t) => { hush(); const txt = falavel(t); if (!txt) return; unlock(); speaking(true);
-    try { const { data } = await sb.functions.invoke('assistente', { body: { tts: txt, voice: voz } });
-      if (!data?.audio || !ac) throw 0; const raw = atob(data.audio), n = raw.length >> 1, rate = +(/rate=(\d+)/.exec(data.mime || '') || [0, 24000])[1];
+  const ttsFetch = (t) => sb.functions.invoke('assistente', { body: { tts: t, voice: voz } }).then((r) => r.data).catch(() => null);
+  const playPCM = (data) => new Promise((res) => { try { const raw = atob(data.audio), n = raw.length >> 1, rate = +(/rate=(\d+)/.exec(data.mime || '') || [0, 24000])[1];
       const ab = ac.createBuffer(1, n, rate), ch = ab.getChannelData(0); for (let i = 0; i < n; i++) { let v = raw.charCodeAt(2 * i) | (raw.charCodeAt(2 * i + 1) << 8); if (v > 32767) v -= 65536; ch[i] = v / 32768; }
-      await new Promise((res) => { src = ac.createBufferSource(); src.buffer = ab; src.connect(out); src.onended = res; stopSay = () => { try { src.stop(); } catch (e) {} res(); }; an = out; buf = new Uint8Array(out.frequencyBinCount); src.start(); });
-    } catch (e) { await browserSay(txt); }
-    an = null; speaking(false); };
+      src = ac.createBufferSource(); src.buffer = ab; src.connect(out); src.onended = res; stopSay = () => { try { src.stop(); } catch (e) {} res(); }; an = out; buf = new Uint8Array(out.frequencyBinCount); src.start(); } catch (e) { res(); } });
+  const limpa = (t) => t.replace(/https?:\/\/\S+/g, '').replace(/(^|\s)\/[a-z][\w\-\/]*\/?/g, ' ').replace(/[*#_`>|•]/g, '').replace(/[\u{1F000}-\u{1FFFF}\u2600-\u27BF\uFE0F]/gu, '').replace(/\s+/g, ' ').trim();
+  // Fala em cascata: cada frase pronta já vai para a voz enquanto o resto ainda chega
+  const falador = () => { let chain = Promise.resolve(), total = 0, cut = false, stop = false; curStop = () => { stop = true; };
+    return { add: (frase) => { if (stop || cut) return; let t = limpa(frase); if (t.length < 2) return; if (total + t.length > 480) { cut = true; t = 'Deixei os detalhes escritos no chat.'; } total += t.length;
+        const pr = ttsFetch(t); chain = chain.then(async () => { if (stop) return; speaking(true); const d = await pr; if (stop) return; if (d?.audio && ac) await playPCM(d); else await browserSay(t); }); },
+      fim: async () => { await chain; an = null; if (!stop) speaking(false); } }; };
+  const say = async (t) => { hush(); unlock(); const f = falador(); (limpa(t).match(/[^.!?]+[.!?]*/g) || []).forEach(f.add); await f.fim(); };
+  // Pergunta com resposta em fluxo (texto aparece aos poucos)
+  const FNURL = SITE.supabaseUrl + '/functions/v1/assistente';
+  const streamAsk = async (body, onText) => { let tok = SITE.supabaseKey; try { tok = (await sb.auth.getSession()).data.session?.access_token || tok; } catch (e) {}
+    const r = await fetch(FNURL, { method: 'POST', headers: { 'content-type': 'application/json', apikey: SITE.supabaseKey, authorization: 'Bearer ' + tok }, body: JSON.stringify({ ...body, stream: true, site: SITE.bot || 'bimcursos' }) }).catch(() => null);
+    if (!r) return '';
+    if (!(r.headers.get('content-type') || '').includes('event-stream') || !r.body) { const j = await r.json().catch(() => ({})); const t = j.reply || ''; if (t) onText(t); return t; }
+    const rd = r.body.getReader(), dec = new TextDecoder(); let acc = '', bf = '';
+    for (;;) { const { done, value } = await rd.read(); if (done) break; bf += dec.decode(value, { stream: true }); let i;
+      while ((i = bf.indexOf('\n\n')) >= 0) { const d = bf.slice(0, i).replace(/^data: ?/, ''); bf = bf.slice(i + 2); if (d === '[DONE]') continue; try { const o = JSON.parse(d); if (o.t) { acc += o.t; onText(acc); } } catch (e) {} } }
+    return acc; };
   const speaking = (v) => { box.classList.toggle('speaking', v); if (vmode) setMode(v ? 'speak' : 'idle', v ? 'Falando…' : 'Toque'); };
 
   // ---- Proposta de honorários Office BIM: PDF com timbre, WhatsApp do próprio cliente e e-mail ----
@@ -96,12 +114,17 @@ ${p.prazo ? `<div class="box"><h3>Prazo</h3>${esc(p.prazo)}</div>` : ''}
     add('user', q || '📎 arquivo enviado'); hist.push({ role: 'user', content: q || 'Analise o arquivo enviado e me ajude.' });
     const sendFiles = files; files = []; chips.innerHTML = '';
     const w = add('assistant', '…'); w.classList.add('typing'); box.classList.add('thinking');
-    const { data } = await sb.functions.invoke('assistente', { body: { messages: hist, files: sendFiles, voice: !!voiced } }).catch(() => ({}));
-    const full = data?.reply || 'Não consegui responder agora. Fale com a equipe pelo WhatsApp.', go = (IR.exec(full) || [])[1], r = full.replace(IR, '').trim();
-    w.remove(); box.classList.remove('thinking'); const bub = add('assistant', r); hist.push({ role: 'assistant', content: r.replace(PR, '[proposta gerada]') }); ss('bot-hist', hist.slice(-16));
+    const fala = (narrar || voiced) ? (unlock(), falador()) : null; let pos = 0;
+    const visivel = (t) => t.replace(PR, '').replace(/\[\[proposta\]\][\s\S]*$/, '').replace(IR, '').replace(/\[\[[^\]]*$/, '').trim();
+    const full0 = await streamAsk({ messages: hist, files: sendFiles, voice: !!voiced }, (acc) => {
+      if (w.classList.contains('typing')) { w.classList.remove('typing'); box.classList.remove('thinking'); }
+      const vis = visivel(acc); w.innerHTML = fmt(vis); log.scrollTop = log.scrollHeight; if (voiced) vtx.textContent = limpa(vis).slice(-240);
+      if (fala) { const corpo = acc.split('[[')[0]; const re = /[^.!?\n]*?[.!?]+(?=\s)|[^\n]+\n/y; re.lastIndex = pos; let m; while ((m = re.exec(corpo))) { fala.add(m[0]); pos = re.lastIndex; } } });
+    const full = full0 || 'Não consegui responder agora. Tente de novo em instantes.'; const go = (IR.exec(full) || [])[1], r = full.replace(IR, '').trim();
+    if (fala) { const corpo = full.split('[[')[0]; if (pos < corpo.length) fala.add(corpo.slice(pos)); }
+    w.classList.remove('typing'); box.classList.remove('thinking'); w.innerHTML = fmt(visivel(full)); const bub = w; hist.push({ role: 'assistant', content: r.replace(PR, '[proposta gerada]') }); ss('bot-hist', hist.slice(-16));
     const pm = PR.exec(r); if (pm) { try { proposalTools(bub, JSON.parse(pm[1].trim().replace(/^```(json)?|```$/g, ''))); } catch (e) {} }
-    if (voiced) vtx.textContent = falavel(r).slice(0, 260);
-    if (narrar || voiced) await say(r);
+    if (fala) await fala.fim();
     if (go) window.open('https://bimcursos.com' + go, '_blank', 'noopener'); return r; };
   hist.forEach((m) => add(m.role, m.content));
   const open = (v) => { win.hidden = !v; box.classList.toggle('open', v); if (v) { unlock(); if (!vmode) setTimeout(() => f.q.focus(), 50); } else { hush(); voiceOn(false); } };
@@ -123,35 +146,41 @@ ${p.prazo ? `<div class="box"><h3>Prazo</h3>${esc(p.prazo)}</div>` : ''}
   const pts = Array.from({ length: 260 }, (_, i) => { const y = 1 - (i / 259) * 2, r = Math.sqrt(1 - y * y), t = i * 2.39996; return [Math.cos(t) * r, y, Math.sin(t) * r]; });
   const draw = (tm) => { const W = cv.width, R = W * .3; ctx.clearRect(0, 0, W, W); const A = mic || an, B = mic ? mbuf : buf;
     if (A && B) { A.getByteFrequencyData(B); level = level * .6 + (B.reduce((x, y) => x + y, 0) / B.length / 80) * .4; }
-    else level = level * .9 + (mode === 'think' ? .12 : .04) * .1;
+    else level = level * .9 + (mode === 'listen' ? .25 + .2 * Math.sin(tm / 140) : mode === 'think' ? .12 : .04) * .1;
     const rot = tm / (mode === 'think' ? 600 : 2400), k = 1 + Math.min(level, 1.2) * .28, hue = mode === 'listen' ? 160 : mode === 'speak' ? 265 : 215;
     for (const [x, y, z] of pts) { const cx = x * Math.cos(rot) - z * Math.sin(rot), cz = x * Math.sin(rot) + z * Math.cos(rot), wob = 1 + Math.sin(tm / 160 + y * 6) * level * .06;
       const sc = (cz + 2) / 3, px = W / 2 + cx * R * k * wob, py = W / 2 + y * R * k * wob;
       ctx.beginPath(); ctx.arc(px, py, 1.1 + sc * 2.7, 0, 6.283); ctx.fillStyle = `hsla(${hue + cz * 35 + level * 40},90%,${55 + sc * 20}%,${.22 + sc * .78})`; ctx.fill(); }
     ctx.beginPath(); ctx.arc(W / 2, W / 2, R * 1.32 * k, 0, 6.283); ctx.strokeStyle = `hsla(${hue},80%,60%,${.3 + level * .45})`; ctx.lineWidth = 3; ctx.stroke();
     raf = requestAnimationFrame(draw); };
-  const setMode = (m, t) => { mode = m; st.textContent = t; vbox.dataset.m = m; };
+  const setMode = (m, t) => { mode = m; st.textContent = t; vbox.dataset.m = m; vbox.classList.toggle('big', m === 'idle'); };
   const stopMic = () => { try { stream?.getTracks().forEach((t) => t.stop()); } catch (e) {} stream = null; mic = null; };
   const listen = async () => { unlock(); if (mode === 'speak') { hush(); }
     if (!SR) { setMode('idle', 'Sem voz'); vtx.textContent = 'Seu navegador não reconhece voz. Use o Chrome ou toque em 💬 para digitar.'; return; }
     if (rec) { rec.stop(); return; }
-    try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); mic = ac.createAnalyser(); mic.fftSize = 64; mbuf = new Uint8Array(mic.frequencyBinCount); ac.createMediaStreamSource(stream).connect(mic); } catch (e) {}
     rec = new SR(); rec.lang = 'pt-BR'; rec.interimResults = true; let said = ''; setMode('listen', 'Sua vez'); vtx.textContent = 'Pode falar…';
     rec.onresult = (e) => { said = [...e.results].map((r) => r[0].transcript).join(''); vtx.textContent = said; };
     rec.onerror = () => {};
-    rec.onend = async () => { rec = null; stopMic(); if (!said.trim()) { setMode('idle', 'Toque'); vtx.textContent = 'Toque na esfera e fale'; return; }
+    rec.onend = async () => { rec = null; stopMic(); if (!said.trim()) { setMode('idle', 'Toque'); vtx.textContent = 'Toque na bolinha e fale'; return; }
       setMode('think', 'Pensando…'); const r = await ask(said, true);
       if (r && vmode && !box.dataset.stop) setTimeout(listen, 350); };
-    delete box.dataset.stop; rec.start(); };
+    delete box.dataset.stop; try { rec.start(); } catch (e) {}
+    if (!/iPhone|iPad|iPod/.test(navigator.userAgent)) navigator.mediaDevices?.getUserMedia({ audio: true }).then((st) => { if (!rec) { st.getTracks().forEach((t) => t.stop()); return; } stream = st; mic = ac.createAnalyser(); mic.fftSize = 64; mbuf = new Uint8Array(mic.frequencyBinCount); ac.createMediaStreamSource(st).connect(mic); }).catch(() => {}); };
   const vbtn = $('[data-v=voz]', box), showVoz = () => { const fem = !/Charon|Puck/.test(voz); vbtn.textContent = fem ? '👩' : '👨'; vbtn.title = 'Voz: ' + (VOZES.find((x) => x[0] === voz) || [, ''])[1] + ' (toque para trocar)'; }; showVoz();
   vbtn.onclick = () => { unlock(); const i = VOZES.findIndex((x) => x[0] === voz); voz = VOZES[(i + 1) % VOZES.length][0]; vsel.value = voz; save(); showVoz(); say('Oi, esta é a voz ' + VOZES.find((x) => x[0] === voz)[1].toLowerCase() + '.'); };
   vsel.addEventListener('change', showVoz);
   const voiceOn = (v) => { vmode = v; vbox.hidden = !v; box.classList.toggle('voice', v); if (v) { win.hidden = true; box.classList.remove('open'); }
     $$('.bot-tabs button', box).forEach((b) => b.setAttribute('aria-selected', String((b.dataset.t === 'voz') === v)));
-    cancelAnimationFrame(raf); if (v) { setMode('idle', 'Toque'); vtx.textContent = 'Toque na esfera e fale'; raf = requestAnimationFrame(draw); } else { box.dataset.stop = 1; rec?.stop(); stopMic(); } };
+    cancelAnimationFrame(raf); if (v) { setMode('idle', 'Toque'); vtx.textContent = 'Toque na bolinha e fale'; raf = requestAnimationFrame(draw); } else { box.dataset.stop = 1; rec?.stop(); stopMic(); } };
   cv.onclick = () => { delete box.dataset.stop; listen(); };
-  $('[data-v=end]', box).onclick = () => { box.dataset.stop = 1; rec?.stop(); hush(); voiceOn(false); };
-  $('[data-v=txt]', box).onclick = () => { voiceOn(false); open(true); };
+  $$('[data-v=end]', box).forEach((b) => (b.onclick = () => { box.dataset.stop = 1; rec?.stop(); hush(); voiceOn(false); }));
+  $$('[data-v=txt]', box).forEach((b) => (b.onclick = () => { voiceOn(false); open(true); }));
+  const vf = $('.vb-f', box);
+  vf.onsubmit = (e) => { e.preventDefault(); const q = vf.q.value.trim(); vf.q.value = ''; voiceOn(false); open(true); if (q) ask(q); };
+  vf.q.addEventListener('focus', () => { voiceOn(false); open(true); setTimeout(() => f.q.focus(), 60); });
+  $('[data-v=file]', vf).onclick = () => { voiceOn(false); open(true); fin.click(); };
+  $('[data-v=cam]', vf).onclick = () => { voiceOn(false); open(true); camIn.click(); };
+  $('[data-v=mic]', vf).onclick = () => { delete box.dataset.stop; listen(); };
   // 🎤 na caixa de texto = mensagem de áudio (grava, transcreve e envia como mensagem escrita)
   let dic = null; const micB = $('[data-k=mic]', f);
   micB.onclick = () => { unlock(); if (dic) { dic.stop(); return; } if (!SR) { add('assistant', 'Seu navegador não grava áudio aqui. Use o Chrome ou digite.'); return; }
