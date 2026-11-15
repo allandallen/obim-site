@@ -164,3 +164,18 @@ try { setTimeout(() => fetch('https://qjunaahcantfiscligvs.supabase.co/functions
   };
   setInterval(put, 1500); put();
 })();
+
+// "Voltar ao topo" (mesmo estilo da BIM CURSOS e do Uhull)
+(() => {
+  if (window.__obSubir) return; window.__obSubir = 1;
+  const st = document.createElement('style');
+  st.textContent = '.ob-subir{position:fixed;left:50%;top:calc(var(--ob-toph,64px) + 10px);transform:translate(-50%,-14px);opacity:0;pointer-events:none;z-index:9000;display:flex;align-items:center;gap:6px;background:rgba(10,14,28,.94);color:#fff;border:1px solid rgba(148,163,184,.35);border-radius:999px;padding:10px 18px;font:800 .9rem/1 Inter,system-ui,sans-serif;box-shadow:0 10px 26px rgba(0,0,0,.45);backdrop-filter:blur(8px);cursor:pointer;transition:.25s}.ob-subir.on{opacity:1;pointer-events:auto;transform:translate(-50%,0)}@media print{.ob-subir{display:none}}';
+  document.head.appendChild(st);
+  const b = document.createElement('button'); b.type = 'button'; b.className = 'ob-subir'; b.textContent = '↑ Voltar ao topo';
+  b.onclick = () => scrollTo({ top: 0, behavior: 'smooth' });
+  const add = () => document.body && !document.body.contains(b) && document.body.appendChild(b);
+  const mede = () => { const h = document.querySelector('header,nav'); const r = h && h.getBoundingClientRect(); document.documentElement.style.setProperty('--ob-toph', (r && r.top <= 0 && r.bottom > 0 ? r.bottom : 0) + 'px'); };
+  let tick = false;
+  addEventListener('scroll', () => { if (tick) return; tick = true; requestAnimationFrame(() => { add(); mede(); b.classList.toggle('on', scrollY > 900); tick = false; }); }, { passive: true });
+  addEventListener('resize', mede);
+})();
