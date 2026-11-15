@@ -16,6 +16,14 @@ for (const f of files) {
 // Assistente virtual (orbe) em todas as páginas
 import { readFile } from 'node:fs/promises';
 await writeFile('dist/bot.js', await readFile('public/bot.js'));
+// nomes novos para JS/CSS a cada publicação (navegador nunca usa versão velha)
+import { rename } from 'node:fs/promises';
+const tag = Date.now().toString(36);
+let html0 = await readFile('dist/index.html', 'utf8');
+for (const f of files.filter((x) => /^assets\/index-[^/]+\.(js|css)$/.test(x))) {
+  const nf = f.replace(/\.(js|css)$/, '.' + tag + '.$1'); await rename('dist/' + f, 'dist/' + nf); html0 = html0.split('/' + f).join('/' + nf);
+}
+await writeFile('dist/index.html', html0);
 const idx = (await readFile('dist/index.html', 'utf8')).replace('</body>', '<script src="/bot.js?v=' + Date.now().toString(36) + '" defer></script></body>');
 await writeFile('dist/index.html', idx);
 // SPA: todas as rotas abrem o index.html
