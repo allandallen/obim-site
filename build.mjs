@@ -24,6 +24,10 @@ await writeFile('dist/equipe/index.html', await readFile('public/equipe.html'));
 await writeFile('dist/ewerton.webp', await readFile('public/ewerton.webp'));
 await writeFile('dist/miriam.webp', await readFile('public/miriam.webp'));
 await writeFile('dist/allan.webp', await readFile('public/allan.webp'));
+// Portfólios em PDF de cada profissional
+import { readdir } from 'node:fs/promises';
+await mkdir('dist/portfolios', { recursive: true });
+for (const f of await readdir('public/portfolios')) await writeFile('dist/portfolios/' + f, await readFile('public/portfolios/' + f));
 // nomes novos para JS/CSS a cada publicação (navegador nunca usa versão velha)
 import { rename } from 'node:fs/promises';
 const tag = Date.now().toString(36);
