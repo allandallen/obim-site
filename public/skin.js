@@ -118,9 +118,49 @@ try { setTimeout(() => fetch('https://qjunaahcantfiscligvs.supabase.co/functions
       <div class="lst"><a class="ob-tc" href="/equipe#allan"><img src="/allan.webp" alt=""><span><b>Allan Dallen Almeida de Sousa</b><small>Mestrado e Doutorado · Edificações e Infraestrutura em BIM</small></span></a>
       <a class="ob-tc" href="/equipe#ewerton"><img src="/ewerton.webp" alt=""><span><b>Ewerton Henrique Almeida da Silva</b><small>BIM Manager · Edificações e Infraestrutura em BIM</small></span></a>
       <a class="ob-tc" href="/equipe#miriam"><img src="/miriam.webp" alt=""><span><b>Miriam Mônica Viegas Miranda</b><small>Especialista · Edificações e Infraestrutura em BIM</small></span></a>
+      <a class="ob-tc" href="/equipe#adrian"><img src="/adrian.webp" alt=""><span><b>Adrian Wallace Santos Aguiar</b><small>Engenheiro Civil e Cartográfico · Perito Judicial · Execução de obras</small></span></a>
       </div>`;
     secs[secs.length - 1].before(t);
   };
   const foot = () => { const f = document.querySelector('footer'); if (f && !f.querySelector('.ob-eq')) { const a = document.createElement('a'); a.className = 'ob-eq'; a.href = '/equipe'; a.textContent = 'Equipe técnica'; a.style.cssText = 'display:block;text-align:center;color:#38bdf8;font-weight:700;padding:8px 0'; f.prepend(a); } };
   const tick = () => { put(); foot(); }; setInterval(tick, 1500); tick();
+})();
+
+// Vitrine de obras de impacto logo abaixo do topo da página inicial
+(function obras() {
+  const css = document.createElement('style');
+  css.textContent = `.ob-works{max-width:1180px;margin:34px auto 10px;padding:0 20px;color:#e2e8f0}
+  .ob-works .hd{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:16px}
+  .ob-works .hd h2{margin:6px 0 4px;font-size:clamp(1.6rem,3.4vw,2.4rem);line-height:1.1}.ob-works .hd p{margin:0;color:#94a3b8;max-width:640px}
+  .ob-works .hd a{color:#38bdf8;font-weight:700;text-decoration:none;white-space:nowrap}
+  .ob-wg{display:grid;grid-template-columns:1.6fr 1fr;grid-template-rows:1fr 1fr;gap:14px;min-height:520px}
+  .ob-wc{position:relative;border-radius:22px;overflow:hidden;border:1px solid rgba(255,255,255,.08);background:#0b1220;text-decoration:none;color:#fff;display:block;min-height:240px;box-shadow:0 30px 70px rgba(0,0,0,.45)}
+  .ob-wc.big{grid-row:1/3}
+  .ob-wc img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .6s}
+  .ob-wc:hover img{transform:scale(1.05)}
+  .ob-wc::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(2,6,23,0) 35%,rgba(2,6,23,.92))}
+  .ob-wc .tx{position:absolute;left:0;right:0;bottom:0;z-index:2;padding:20px}
+  .ob-wc .tg{display:inline-block;font:700 .7rem Inter,sans-serif;letter-spacing:.12em;text-transform:uppercase;background:rgba(37,99,235,.85);padding:5px 10px;border-radius:999px;margin-bottom:8px}
+  .ob-wc h3{margin:0 0 4px;font-size:clamp(1.1rem,2.2vw,1.6rem);line-height:1.15}.ob-wc p{margin:0;color:#cbd5e1;font-size:.92rem}
+  .ob-wc .pl{position:absolute;right:18px;top:18px;z-index:2;display:flex;align-items:center;gap:8px;background:rgba(2,6,23,.7);border:1px solid rgba(255,255,255,.25);padding:8px 14px;border-radius:999px;font:700 .85rem Inter,sans-serif;color:#fff;cursor:pointer}
+  .ob-nums{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:14px}
+  .ob-nums div{background:#0b1220;border:1px solid #1e293b;border-radius:16px;padding:14px;text-align:center}.ob-nums b{display:block;font:700 1.6rem "Space Grotesk",Inter,sans-serif;background:linear-gradient(90deg,#93c5fd,#38bdf8);-webkit-background-clip:text;background-clip:text;color:transparent}.ob-nums span{font-size:.78rem;color:#94a3b8}
+  .ob-vm{position:fixed;inset:0;z-index:99999;background:rgba(2,6,23,.9);display:grid;place-items:center;padding:16px}.ob-vm video{width:min(1000px,100%);max-height:85vh;border-radius:16px;background:#000}.ob-vm button{position:absolute;top:16px;right:16px;background:#fff;border:0;border-radius:50%;width:40px;height:40px;font-size:1.1rem;cursor:pointer}
+  @media(max-width:820px){.ob-wg{grid-template-columns:1fr;grid-template-rows:auto;min-height:0}.ob-wc.big{grid-row:auto;min-height:340px}.ob-nums{grid-template-columns:repeat(2,1fr)}}`;
+  document.head.append(css);
+  const put = () => {
+    if (location.pathname !== '/' || document.querySelector('.ob-works')) return;
+    const main = document.querySelector('main'); if (!main) return; const secs = main.querySelectorAll(':scope > section, :scope > div > section'); if (secs.length < 2) return;
+    const w = document.createElement('section'); w.className = 'ob-works';
+    w.innerHTML = `<div class="hd"><div><span class="ob-kick">OBRAS E PROJETOS DE DESTAQUE</span><h2>Da modelagem BIM à obra executada</h2><p>Projetos e execuções de grande porte da Office BIM na Amazônia: armazenagem de grãos, estrutura portuária e infraestrutura rodoviária.</p></div><a href="/equipe#execucao">Ver todas as obras →</a></div>
+      <div class="ob-wg">
+        <a class="ob-wc big" href="/equipe#execucao"><img src="/obras/fh-19.webp" alt="Vista aérea dos silos da FH Agro" loading="lazy"><span class="pl" data-ob-video="/obras/fh-tour.mp4">▶ Tour pela obra</span><div class="tx"><span class="tg">Armazenagem de grãos</span><h3>FH Agro · Mojuí dos Campos/PA</h3><p>Unidade armazenadora com silos, moega, torre de elevadores e barracão graneleiro: do projeto em BIM à execução.</p></div></a>
+        <a class="ob-wc" href="/equipe#execucao"><img src="/obras/cn-9.webp" alt="Vista aérea do porto e armazéns da Calha Norte" loading="lazy"><div class="tx"><span class="tg">Portuário</span><h3>Porto e armazenagem Calha Norte · Santarém/PA</h3><p>Píer sobre estacas, galpões e pátio, com locação por GNSS e estação total.</p></div></a>
+        <a class="ob-wc" href="/equipe#execucao"><img src="/obras/rod-1.webp" alt="Execução rodoviária e terraplenagem" loading="lazy"><div class="tx"><span class="tg">Infraestrutura rodoviária</span><h3>Rodovias e terraplenagem</h3><p>Adequação da MT-020 (SINFRA-MT), complexo BSO e topografia de campo.</p></div></a>
+      </div>
+      <div class="ob-nums"><div><b>+10 mi</b><span>m² projetados em BIM</span></div><div><b>+20</b><span>empreendimentos de grande porte</span></div><div><b>Desde 2013</b><span>projetando e executando</span></div><div><b>+52 mil</b><span>alunos formados na BIM Cursos</span></div></div>`;
+    secs[0].after(w);
+    w.querySelector('[data-ob-video]')?.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); const m = document.createElement('div'); m.className = 'ob-vm'; m.innerHTML = `<video src="${e.currentTarget.dataset.obVideo}" controls autoplay playsinline></video><button aria-label="Fechar">✕</button>`; m.addEventListener('click', (k) => { if (k.target === m || k.target.tagName === 'BUTTON') m.remove(); }); document.body.append(m); });
+  };
+  setInterval(put, 1500); put();
 })();
