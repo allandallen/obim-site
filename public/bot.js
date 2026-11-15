@@ -4,7 +4,7 @@ const CSS = ".bot{--bg2:#0e1222;--tx:#e8ecf5;--line:rgba(255,255,255,.12);--mut:
 (() => {
   if (window.__obBot) return; window.__obBot = 1;
   const FN = 'https://qjunaahcantfiscligvs.supabase.co/functions/v1/assistente', KEY = 'sb_publishable_IeLlzcOWO7bc6eUyhvnMWg_jtEbMh32';
-  const SITE = { whatsapp: '5593991863444', supabaseUrl: 'https://qjunaahcantfiscligvs.supabase.co', supabaseKey: KEY, bot: 'obim', botTitle: 'Assistente Office BIM' };
+  const SITE = { whatsapp: '5593991863444', supabaseUrl: 'https://qjunaahcantfiscligvs.supabase.co', supabaseKey: KEY, bot: 'obim', botTitle: 'Assistente Office BIM', botTip: '✨ Atendimento Office BIM · 24h' };
   const $ = (s, el = document) => el.querySelector(s), $$ = (s, el = document) => [...el.querySelectorAll(s)];
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const sb = { functions: { invoke: async (_n, { body }) => { try { const r = await fetch(FN, { method: 'POST', headers: { 'content-type': 'application/json', apikey: KEY }, body: JSON.stringify({ ...body, site: 'obim' }) }); return { data: await r.json() }; } catch (e) { return { data: null }; } } }, auth: { getSession: async () => ({ data: { session: null } }) } };
@@ -16,7 +16,7 @@ const CSS = ".bot{--bg2:#0e1222;--tx:#e8ecf5;--line:rgba(255,255,255,.12);--mut:
   const save = () => { try { localStorage.setItem('bot-pref', JSON.stringify({ voz, narrar })); } catch (e) {} };
   const TITULO = SITE.botTitle || 'Assistente BIM CURSOS';
   const box = document.createElement('div'); box.className = 'bot';
-  box.innerHTML = `<button class="orb" aria-label="Abrir assistente Office BIM" title="Tire suas dúvidas com o assistente"><span class="orb-core"></span><span class="orb-glow"></span><span class="orb-tip">Toque e fale comigo 🎙️</span></button>
+  box.innerHTML = `<button class="orb" aria-label="Abrir assistente Office BIM" title="Tire suas dúvidas com o assistente"><span class="orb-core"></span><span class="orb-glow"></span><span class="orb-tip">${SITE.botTip || '✨ Suporte BIM CURSOS · 24h'}</span></button>
     <section class="bot-win" hidden role="dialog" aria-label="Assistente Office BIM"><header><span class="orb mini"><span class="orb-core"></span></span><div><b>Assistente Office BIM</b><span>projetos · orçamentos · fala e ouve</span></div><button class="bot-x" aria-label="Fechar">×</button></header>
     <div class="bot-opts"><div class="bot-tabs" role="tablist"><button type="button" data-t="voz" role="tab">🎙️ Conversar por voz</button><button type="button" data-t="txt" role="tab">⌨️ Texto</button></div>
       <div class="bot-row"><label class="bot-sw"><input type="checkbox" class="bot-narr"><span></span> Narrar respostas</label><select class="bot-vsel" aria-label="Escolher voz">${VOZES.map(([v, n]) => `<option value="${v}">${n}</option>`).join('')}</select></div></div>
