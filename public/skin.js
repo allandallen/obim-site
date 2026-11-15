@@ -65,6 +65,8 @@ main h2{font-size:clamp(1.9rem,3.6vw,3.1rem)!important;line-height:1.08!importan
     const secs = [...main.querySelectorAll(':scope > section')]; if (secs.length < 4) return false;
     // título do topo: destaca o final da frase
     const h1 = document.querySelector('#top h1'); if (h1 && !h1.dataset.ob) { h1.dataset.ob = 1; const t = h1.textContent; const k = t.indexOf(':'); if (k > 0) h1.innerHTML = t.slice(0, k + 1) + ' <span class="ob-hl">' + t.slice(k + 1).trim() + '</span>'; }
+    // logo do topo: símbolo sem caixa branca
+    document.querySelectorAll('header img, footer img').forEach((lg) => { if (lg.dataset.ob || lg.naturalWidth > 600) return; lg.dataset.ob = 1; lg.src = '/ob-simbolo.webp'; lg.style.background = 'transparent'; lg.style.padding = '0'; lg.style.objectFit = 'contain'; const p = lg.parentElement; if (p && p.tagName !== 'HEADER') { p.style.background = 'transparent'; p.style.boxShadow = 'none'; p.style.border = '0'; } });
     // rótulos "01 / SOBRE..." viram etiquetas
     main.querySelectorAll('p,span,div').forEach((el) => { if (el.children.length === 0 && /^\d{2} \/ /.test(el.textContent.trim()) && !el.classList.contains('ob-kick')) el.classList.add('ob-kick'); });
     // faixa de tecnologias depois dos números
