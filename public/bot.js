@@ -37,6 +37,8 @@ const CSS = ".bot{--bg2:#0e1222;--tx:#e8ecf5;--line:rgba(255,255,255,.12);--mut:
   narr.onchange = () => { narrar = narr.checked; save(); if (!narrar) hush(); };
   const ss = (k, v) => { try { if (v === undefined) return JSON.parse(sessionStorage.getItem(k) || 'null'); sessionStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
   const hist = ss('bot-hist') || []; let files = [], vmode = false;
+  let proto = ss('bot-proto'); const novoProto = () => { proto = 'AT-' + new Date().toISOString().slice(2, 10).replace(/-/g, '') + '-' + Math.random().toString(36).slice(2, 6).toUpperCase(); ss('bot-proto', proto); showProto(); };
+  const showProto = () => { const el = $('.bot-win header span', box); if (el) el.textContent = proto ? 'Protocolo ' + proto : 'fala, ouve e lê arquivos'; };
   const fmt = (t) => esc(t).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/(https?:\/\/[^\s<)]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>').replace(/(^|\s)(\/[a-z][\w\-\/]*\/?)/g, '$1<a href="$2">$2</a>').replace(/\n/g, '<br>');
   const IR = /\[\[ir:(\/[^\]\s]*)\]\]/;
   const PR = /\[\[proposta\]\]([\s\S]*?)\[\[\/proposta\]\]/;
@@ -111,13 +113,13 @@ ${p.prazo ? `<div class="box"><h3>Prazo</h3>${esc(p.prazo)}</div>` : ''}
     $('[data-a=pdf]', bar).onclick = () => pdfProposta(p);
     $('[data-a=mail]', bar).onclick = () => { location.href = 'mailto:' + encodeURIComponent(p.email || '') + '?subject=' + encodeURIComponent('Proposta Office BIM ' + p.numero) + '&body=' + encodeURIComponent(resumo(p) + '\n\nBaixe o PDF completo pelo assistente em obim.com.br.'); }; };
   const ask = async (q, voiced) => { q = q.trim(); if (!q && !files.length) return; $('.bot-sug', box)?.remove(); hush();
-    add('user', q || '📎 arquivo enviado'); hist.push({ role: 'user', content: q || 'Analise o arquivo enviado e me ajude.' });
+    if (!proto) novoProto(); const ub = add('user', q || '📎 arquivo enviado'); const tk = document.createElement('span'); tk.className = 'tick'; tk.textContent = '✓'; ub.append(tk); hist.push({ role: 'user', content: q || 'Analise o arquivo enviado e me ajude.' });
     const sendFiles = files; files = []; chips.innerHTML = '';
     const w = add('assistant', '…'); w.classList.add('typing'); box.classList.add('thinking');
     const fala = (narrar || voiced) ? (unlock(), falador()) : null; let pos = 0;
     const visivel = (t) => t.replace(PR, '').replace(/\[\[proposta\]\][\s\S]*$/, '').replace(IR, '').replace(/\[\[[^\]]*$/, '').trim();
-    const full0 = await streamAsk({ messages: hist, files: sendFiles, voice: !!voiced }, (acc) => {
-      if (w.classList.contains('typing')) { w.classList.remove('typing'); box.classList.remove('thinking'); }
+    const full0 = await streamAsk({ messages: hist, files: sendFiles, voice: !!voiced, protocolo: proto }, (acc) => {
+      if (w.classList.contains('typing')) { w.classList.remove('typing'); box.classList.remove('thinking'); tk.textContent = '✓✓'; tk.classList.add('lida'); }
       const vis = visivel(acc); w.innerHTML = fmt(vis); log.scrollTop = log.scrollHeight; if (voiced) vtx.textContent = limpa(vis).slice(-240);
       if (fala) { const corpo = acc.split('[[')[0]; const re = /[^.!?\n]*?[.!?]+(?=\s)|[^\n]+\n/y; re.lastIndex = pos; let m; while ((m = re.exec(corpo))) { fala.add(m[0]); pos = re.lastIndex; } } });
     const full = full0 || 'Não consegui responder agora. Tente de novo em instantes.'; const go = (IR.exec(full) || [])[1], r = full.replace(IR, '').trim();
@@ -126,7 +128,7 @@ ${p.prazo ? `<div class="box"><h3>Prazo</h3>${esc(p.prazo)}</div>` : ''}
     const pm = PR.exec(r); if (pm) { try { proposalTools(bub, JSON.parse(pm[1].trim().replace(/^```(json)?|```$/g, ''))); } catch (e) {} }
     if (fala) await fala.fim();
     if (go) window.open('https://bimcursos.com' + go, '_blank', 'noopener'); return r; };
-  hist.forEach((m) => add(m.role, m.content));
+  hist.forEach((m) => add(m.role, m.content)); showProto();
   const open = (v) => { win.hidden = !v; box.classList.toggle('open', v); if (v) { unlock(); if (!vmode) setTimeout(() => f.q.focus(), 50); } else { hush(); voiceOn(false); } };
   document.addEventListener('click', (e) => { if (e.target.closest('[data-open-bot]')) { unlock(); voiceOn(false); open(true); } });
   $('.orb', box).onclick = () => { unlock(); if (vmode) { voiceOn(false); return; } if (!win.hidden) { open(false); return; } voiceOn(true); };
