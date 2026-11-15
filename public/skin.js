@@ -117,7 +117,7 @@ try { setTimeout(() => fetch('https://qjunaahcantfiscligvs.supabase.co/functions
     t.innerHTML = `<div><span class="ob-kick">05 / EQUIPE TÉCNICA</span><h2>Especialistas em BIM</h2><p>Quem coordena e assina os seus projetos: engenheiros e especialistas em BIM, com registro no CREA, BIM Managers e professores da BIM Cursos.</p><p style="margin-top:12px"><a href="/equipe" style="color:#38bdf8;font-weight:700">Ver perfis completos →</a></p></div>
       <div class="lst"><a class="ob-tc" href="/equipe#ewerton"><img src="/ewerton.webp" alt=""><span><b>Ewerton Henrique Almeida da Silva</b><small>Engenheiro Civil · BIM Manager</small></span></a>
       <a class="ob-tc" href="/equipe#miriam"><img src="/miriam.webp" alt=""><span><b>Miriam Mônica Viegas Miranda</b><small>Especialista em BIM e Infraestrutura</small></span></a>
-      <a class="ob-tc" href="/equipe#allan"><i>AD</i><span><b>Allan Dallen Almeida de Sousa</b><small>Engenheiro Civil · Fundador</small></span></a></div>`;
+      <a class="ob-tc" href="/equipe#allan"><img src="/allan.webp" alt=""><span><b>Allan Dallen Almeida de Sousa</b><small>Engenheiro Civil · Fundador</small></span></a></div>`;
     secs[secs.length - 1].before(t);
   };
   const foot = () => { const f = document.querySelector('footer'); if (f && !f.querySelector('.ob-eq')) { const a = document.createElement('a'); a.className = 'ob-eq'; a.href = '/equipe'; a.textContent = 'Equipe técnica'; a.style.cssText = 'display:block;text-align:center;color:#38bdf8;font-weight:700;padding:8px 0'; f.prepend(a); } };
