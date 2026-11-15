@@ -80,10 +80,15 @@ main h2{font-size:clamp(1.9rem,3.6vw,3.1rem)!important;line-height:1.08!importan
     if (!main.querySelector('.ob-marq') && secs[2]) { const m = document.createElement('div'); m.className = 'ob-marq'; const row = TECH.map((x) => `<span>${x}</span>`).join(''); m.innerHTML = `<div>${row}${row}</div>`; secs[2].append(m); }
     // WhatsApp flutuante sai do canto (o assistente fica lá); o contato continua no topo, nos botões e no rodapé
     document.querySelectorAll('a[href*="wa.me"],a[href*="whatsapp"]').forEach((a) => { if (a.closest('header,.bot')) return; let e = a; while (e && e !== document.body) { if (getComputedStyle(e).position === 'fixed') { e.style.display = 'none'; break; } e = e.parentElement; } });
+    renomeia();
     // entrada suave ao rolar
     if (io) main.querySelectorAll(':scope > section:not(#top) h2, :scope > section article, :scope > section button.group.flex-col, :scope > section dl > div').forEach((el) => { if (!el.classList.contains('ob-rv')) { el.classList.add('ob-rv'); io.observe(el); } });
     return true;
   };
+  // WhatsApp fica só no topo; os botões do meio da página abrem o assistente (que monta o orçamento)
+  document.addEventListener('click', (e) => { const a = e.target.closest('main a[href*="wa.me"], main a[href*="whatsapp"]'); if (!a) return; e.preventDefault(); a.setAttribute('data-open-bot', ''); }, true);
+  const renomeia = () => document.querySelectorAll('main a[href*="wa.me"], main a[href*="whatsapp"]').forEach((a) => { a.setAttribute('data-open-bot', '');
+    a.querySelectorAll('*').forEach(() => {}); const w = document.createTreeWalker(a, NodeFilter.SHOW_TEXT); let n; while ((n = w.nextNode())) { n.nodeValue = n.nodeValue.replace(/no whatsapp/i, 'com o assistente').replace(/falar com o comercial/i, 'Falar com o assistente').replace(/whatsapp office bim/i, 'Atendimento Office BIM'); } });
   let n = 0; const t = setInterval(() => { if (enhance() || ++n > 40) clearInterval(t); }, 250);
   new MutationObserver(() => { clearTimeout(window.__obT); window.__obT = setTimeout(enhance, 300); }).observe(document.documentElement, { childList: true, subtree: true });
 })();
