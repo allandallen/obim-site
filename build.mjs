@@ -10,6 +10,11 @@ for (const f of files) {
   await mkdir(dirname(out), { recursive: true });
   await writeFile(out, Buffer.from(await r.arrayBuffer()));
 }
+// Assistente virtual (orbe) em todas as páginas
+import { readFile } from 'node:fs/promises';
+await writeFile('dist/bot.js', await readFile('public/bot.js'));
+const idx = (await readFile('dist/index.html', 'utf8')).replace('</body>', '<script src="/bot.js?v=' + Date.now().toString(36) + '" defer></script></body>');
+await writeFile('dist/index.html', idx);
 // SPA: todas as rotas abrem o index.html
 await writeFile('dist/_redirects', '/* /index.html 200\n');
 await writeFile('dist/_headers', '/cdn/*\n  Cache-Control: public, max-age=31536000, immutable\n/assets/*\n  Cache-Control: public, max-age=31536000, immutable\n');
