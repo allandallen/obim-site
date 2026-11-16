@@ -36,7 +36,7 @@ const CSS = ".bot{--bg2:#0e1222;--tx:#e8ecf5;--line:rgba(255,255,255,.12);--mut:
   vsel.onchange = () => { voz = vsel.value; save(); unlock(); say('Oi! Esta é a minha voz. Pode falar comigo.'); };
   narr.onchange = () => { narrar = narr.checked; save(); if (!narrar) hush(); };
   const ss = (k, v) => { try { if (v === undefined) return JSON.parse(sessionStorage.getItem(k) || 'null'); sessionStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
-  const hist = ss('bot-hist') || []; let files = [], vmode = false;
+  const hist = ss('bot-hist') || []; let files = [], vmode = false; let modoH = false;
   let proto = ss('bot-proto'); const novoProto = () => { proto = 'AT-' + new Date().toISOString().slice(2, 10).replace(/-/g, '') + '-' + Math.random().toString(36).slice(2, 6).toUpperCase(); ss('bot-proto', proto); showProto(); };
   const showProto = () => { const el = $('.bot-win header span', box); if (el) el.textContent = proto ? 'Protocolo ' + proto : 'fala, ouve e lê arquivos'; };
   const fmt = (t) => esc(t).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/(https?:\/\/[^\s<)]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>').replace(/(^|\s)(\/[a-z][\w\-\/]*\/?)/g, '$1<a href="$2">$2</a>').replace(/\n/g, '<br>');
@@ -70,7 +70,7 @@ const CSS = ".bot{--bg2:#0e1222;--tx:#e8ecf5;--line:rgba(255,255,255,.12);--mut:
   const streamAsk = async (body, onText) => { let tok = SITE.supabaseKey; try { tok = (await sb.auth.getSession()).data.session?.access_token || tok; } catch (e) {}
     const r = await fetch(FNURL, { method: 'POST', headers: { 'content-type': 'application/json', apikey: SITE.supabaseKey, authorization: 'Bearer ' + tok }, body: JSON.stringify({ ...body, stream: true, site: SITE.bot || 'bimcursos' }) }).catch(() => null);
     if (!r) return '';
-    if (!(r.headers.get('content-type') || '').includes('event-stream') || !r.body) { const j = await r.json().catch(() => ({})); const t = j.reply || ''; if (t) onText(t); return t; }
+    if (!(r.headers.get('content-type') || '').includes('event-stream') || !r.body) { const j = await r.json().catch(() => ({})); if (j.humano) modoH = true; const t = j.reply || ''; if (t) onText(t); return t; }
     const rd = r.body.getReader(), dec = new TextDecoder(); let acc = '', bf = '';
     for (;;) { const { done, value } = await rd.read(); if (done) break; bf += dec.decode(value, { stream: true }); let i;
       while ((i = bf.indexOf('\n\n')) >= 0) { const d = bf.slice(0, i).replace(/^data: ?/, ''); bf = bf.slice(i + 2); if (d === '[DONE]') continue; try { const o = JSON.parse(d); if (o.t) { acc += o.t; onText(acc); } } catch (e) {} } }
@@ -122,6 +122,7 @@ ${p.prazo ? `<div class="box"><h3>Prazo</h3>${esc(p.prazo)}</div>` : ''}
       if (w.classList.contains('typing')) { w.classList.remove('typing'); box.classList.remove('thinking'); tk.textContent = '✓✓'; tk.classList.add('lida'); }
       const vis = visivel(acc); w.innerHTML = fmt(vis); log.scrollTop = log.scrollHeight; if (voiced) vtx.textContent = limpa(vis).slice(-240);
       if (fala) { const corpo = acc.split('[[')[0]; const re = /[^.!?\n]*?[.!?]+(?=\s)|[^\n]+\n/y; re.lastIndex = pos; let m; while ((m = re.exec(corpo))) { fala.add(m[0]); pos = re.lastIndex; } } });
+    if (!full0 && modoH) { w.remove(); box.classList.remove('thinking'); tk.textContent = '✓✓'; tk.classList.add('lida'); ss('bot-hist', hist.slice(-16)); setTimeout(poll, 800); return ''; }
     const full = full0 || 'Não consegui responder agora. Tente de novo em instantes.'; const go = (IR.exec(full) || [])[1], r = full.replace(IR, '').trim();
     if (fala) { const corpo = full.split('[[')[0]; if (pos < corpo.length) fala.add(corpo.slice(pos)); }
     w.classList.remove('typing'); box.classList.remove('thinking'); w.innerHTML = fmt(visivel(full)); const bub = w; hist.push({ role: 'assistant', content: r.replace(PR, '[proposta gerada]') }); ss('bot-hist', hist.slice(-16));
@@ -129,6 +130,20 @@ ${p.prazo ? `<div class="box"><h3>Prazo</h3>${esc(p.prazo)}</div>` : ''}
     if (fala) await fala.fim();
     if (go) window.open('https://bimcursos.com' + go, '_blank', 'noopener'); return r; };
   hist.forEach((m) => add(m.role, m.content)); showProto();
+  // Atendimento ao vivo: quando a equipe assume, as mensagens dela (texto, foto, vídeo, áudio, arquivo) chegam aqui
+  let nSrv = ss('bot-nsrv') || 0;
+  const addH = (m) => { const p = document.createElement('div'); const u = m.media?.url ? esc(m.media.url) : '';
+    if (m.role === 'sistema') { p.className = 'bot-m a'; p.style.cssText = 'align-self:center;font-size:.75rem;opacity:.75;background:transparent;border:1px dashed rgba(148,163,184,.4)'; p.textContent = m.content || ''; }
+    else { p.className = 'bot-m a'; p.style.cssText = 'background:#065f46;color:#ecfdf5';
+      p.innerHTML = `<small style="display:block;font-size:.7rem;font-weight:700;opacity:.85;margin-bottom:2px">👤 ${esc(m.by || 'Equipe')}</small>` + (u ? (m.media.type === 'image' ? `<a href="${u}" target="_blank" rel="noopener"><img src="${u}" alt="" style="max-width:220px;max-height:260px;border-radius:10px;display:block;margin:2px 0"></a>` : m.media.type === 'video' ? `<video src="${u}" controls playsinline style="max-width:240px;border-radius:10px;display:block"></video>` : m.media.type === 'audio' ? `<audio src="${u}" controls style="width:220px;max-width:100%"></audio>` : `<a href="${u}" target="_blank" rel="noopener" style="color:inherit">📎 ${esc(m.media.name || 'arquivo')}</a>`) : '') + (m.content ? `<div>${fmt(m.content)}</div>` : ''); }
+    log.append(p); log.scrollTop = log.scrollHeight; };
+  const poll = async () => { if (!proto) return; try { const r = await fetch(SITE.supabaseUrl + '/rest/v1/rpc/chat_poll', { method: 'POST', headers: { apikey: SITE.supabaseKey, 'content-type': 'application/json' }, body: JSON.stringify({ p_proto: proto, p_desde: nSrv }) });
+      const j = await r.json(); if (!j || typeof j !== 'object') return; modoH = j.modo === 'humano'; box.classList.toggle('humano', modoH);
+      const novas = j.msgs || []; novas.forEach((m) => { addH(m); if (m.role === 'human' && m.content) hist.push({ role: 'assistant', content: '[' + (m.by || 'Equipe') + '] ' + m.content }); });
+      if (novas.length) { ss('bot-hist', hist.slice(-16)); if (win.hidden && novas.some((m) => m.role === 'human')) open(true); }
+      nSrv = j.total || nSrv; ss('bot-nsrv', nSrv); } catch (e) {} };
+  setInterval(() => { if (!document.hidden && proto) poll(); }, 4000); setTimeout(poll, 1500);
+
   const open = (v) => { win.hidden = !v; box.classList.toggle('open', v); if (v) { unlock(); if (!vmode) setTimeout(() => f.q.focus(), 50); } else { hush(); voiceOn(false); } };
   document.addEventListener('click', (e) => { if (e.target.closest('[data-open-bot]')) { unlock(); voiceOn(false); open(true); } });
   $('.orb', box).onclick = () => { unlock(); if (vmode) { voiceOn(false); return; } if (!win.hidden) { open(false); return; } voiceOn(true); };
