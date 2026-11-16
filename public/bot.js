@@ -275,3 +275,9 @@ ${p.prazo ? `<div class="box"><h3>Prazo</h3>${esc(p.prazo)}</div>` : ''}
       const pos = () => { const r = el.getBoundingClientRect(); tip.style.left = Math.max(8, r.left + scrollX + r.width / 2 - 50) + 'px'; tip.style.top = Math.max(8, r.top + scrollY - 42) + 'px'; }; pos(); const iv = setInterval(pos, 200);
       const sai = () => { el.classList.remove('bot-hl'); tip.remove(); clearInterval(iv); }; setTimeout(sai, 12000); el.addEventListener('click', sai, { once: true }); }, 300); };
   setTimeout(() => window.__botHL(), 900); })();
+
+// Balão do assistente: frases que se revezam para mostrar que a bolinha é um assistente que atende, orça e tira dúvidas
+(() => { const F = ["✨ Faça seu orçamento com o assistente", "💬 Pergunte ao assistente: projetos e obras", "📄 Proposta em PDF na hora", "🎙️ Pode falar comigo por voz", "🎓 Dúvidas sobre a BIM CURSOS também", "✨ Atendimento Office BIM · 24h"]; let i = 0;
+  const st = document.createElement('style'); st.textContent = '.orb-tip.troca{animation:tipin .5s ease}@keyframes tipin{from{opacity:0}to{opacity:1}}'; document.head.append(st);
+  setInterval(() => { const t = document.querySelector('.bot .orb-tip'); const b = t?.closest('.bot'); if (!t || b?.classList.contains('open') || b?.classList.contains('voice')) return;
+    i = (i + 1) % F.length; t.textContent = F[i]; t.classList.remove('troca'); void t.offsetWidth; t.classList.add('troca'); }, 4500); })();
