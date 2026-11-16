@@ -178,19 +178,21 @@ ${p.prazo ? `<div class="box"><h3>Prazo</h3>${esc(p.prazo)}</div>` : ''}
 
   // Identificação rápida antes do atendimento: nome, e-mail e cidade/UF (uma vez por aparelho); a assistente não pergunta de novo
   const LEAD = () => { try { return JSON.parse(localStorage.getItem('bot-lead') || 'null'); } catch (e) { return null; } };
-  const leadTxt = () => { const l = LEAD(); return l ? `[Dados do cliente, já informados: nome ${l.nome}; e-mail ${l.email}; cidade ${l.cidade}. Não pergunte esses dados de novo.]` : ''; };
+  const leadTxt = () => { const l = LEAD(); return l ? `[Dados do cliente, já informados: nome ${l.nome}; e-mail ${l.email}; telefone ${l.telefone || '-'}; cidade ${l.cidade}; página atual ${location.pathname}. Chame pelo primeiro nome e não peça esses dados de novo.]` : ''; };
   const pedeLead = (depois) => { if (LEAD()) { depois?.(); return; } win.hidden = false; box.classList.add('open'); if ($('.bot-lead', win)) return;
     const u = {}; const fm = document.createElement('form'); fm.className = 'bot-lead';
     fm.style.cssText = 'position:absolute;inset:auto 0 0 0;top:64px;z-index:5;background:linear-gradient(180deg,#121a35,#0b1020);padding:18px 16px;display:flex;flex-direction:column;gap:10px;overflow:auto;color:#e8ecf5';
     const ip = 'width:100%;min-height:46px;border-radius:14px;border:1px solid rgba(255,255,255,.2);background:rgba(0,0,0,.25);color:#fff;padding:0 14px;font:500 1rem Inter,system-ui,sans-serif';
-    fm.innerHTML = `<b style="font:800 1.15rem Inter,system-ui,sans-serif">👋 Antes de começar</b><span style="color:#94a3b8;font-size:.9rem">Para te atender melhor (e mandar a proposta ou a resposta por e-mail), preencha só uma vez:</span>
+    fm.innerHTML = `<b style="font:800 1.15rem Inter,system-ui,sans-serif">👋 Antes de começar</b><span style="color:#94a3b8;font-size:.9rem">Para te atender melhor e enviar a proposta ou a resposta por e-mail, preencha só uma vez:</span>
       <input name="nome" required minlength="3" placeholder="Seu nome completo" autocomplete="name" style="${ip}" value="${esc(u.nome || '')}">
       <input name="email" type="email" required placeholder="Seu e-mail" autocomplete="email" inputmode="email" style="${ip}" value="${esc(u.email || '')}">
+      <input name="telefone" type="tel" required inputmode="tel" placeholder="Seu WhatsApp com DDD" autocomplete="tel" style="${ip}">
       <input name="cidade" required minlength="3" placeholder="Sua cidade e estado (ex.: Santarém/PA)" autocomplete="address-level2" style="${ip}">
       <button style="min-height:50px;border:0;border-radius:999px;background:#ff6a00;color:#fff;font:800 1rem Inter,system-ui,sans-serif;cursor:pointer">Começar atendimento →</button>
       <small style="color:#64748b">Seus dados ficam só com a nossa equipe, para responder você.</small>`;
-    fm.onsubmit = (e) => { e.preventDefault(); const d = Object.fromEntries(new FormData(fm)); if (!/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(d.email.trim())) { fm.email.focus(); return; }
-      try { localStorage.setItem('bot-lead', JSON.stringify({ nome: d.nome.trim(), email: d.email.trim().toLowerCase(), cidade: d.cidade.trim() })); } catch (er) {}
+    fm.onsubmit = (e) => { e.preventDefault(); const d = Object.fromEntries(new FormData(fm)); if (!/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(d.email.trim())) { fm.email.focus(); return; } const tel = d.telefone.replace(/\D/g, '').replace(/^55(?=\d{10,11}$)/, ''); if (!/^[1-9]\d9?\d{8}$/.test(tel)) { fm.telefone.setCustomValidity('Informe o celular com DDD, ex.: (93) 99999-9999'); fm.telefone.reportValidity(); fm.telefone.oninput = () => fm.telefone.setCustomValidity(''); return; } d.telefone = '(' + tel.slice(0, 2) + ') ' + tel.slice(2, -4) + '-' + tel.slice(-4);
+      const ld = { nome: d.nome.trim(), email: d.email.trim().toLowerCase(), telefone: d.telefone, cidade: d.cidade.trim() }; try { localStorage.setItem('bot-lead', JSON.stringify(ld)); } catch (er) {}
+      fetch(SITE.supabaseUrl + '/rest/v1/rpc/lead_salvar', { method: 'POST', headers: { apikey: SITE.supabaseKey, 'content-type': 'application/json' }, body: JSON.stringify({ p: { ...ld, site: SITE.bot || 'bimcursos', protocolo: proto } }) }).catch(() => {});
       fm.remove(); add('assistant', `Prazer, ${esc(d.nome.trim().split(' ')[0])}! 😊 Como posso te ajudar?`); depois?.(); };
     $('header', win).after(fm); setTimeout(() => (u.email ? fm.cidade : fm.nome).focus(), 80); };
   const open = (v) => { win.hidden = !v; box.classList.toggle('open', v); if (v) { unlock(); if (!LEAD()) { pedeLead(); return; } if (!vmode) setTimeout(() => f.q.focus(), 50); } else { hush(); voiceOn(false); } };
@@ -331,3 +333,17 @@ ${p.prazo ? `<div class="box"><h3>Prazo</h3>${esc(p.prazo)}</div>` : ''}
   const st = document.createElement('style'); st.textContent = '.orb-tip.troca{animation:tipin .5s ease}@keyframes tipin{from{opacity:0}to{opacity:1}}'; document.head.append(st);
   setInterval(() => { const t = document.querySelector('.bot .orb-tip'); const b = t?.closest('.bot'); if (!t || b?.classList.contains('open') || b?.classList.contains('voice')) return;
     i = (i + 1) % F.length; t.textContent = F[i]; t.classList.remove('troca'); void t.offsetWidth; t.classList.add('troca'); }, 4500); })();
+
+// Acessos da Office BIM no painel da BIM CURSOS (mesmo painel: visitas, cidades, origens, páginas e quem está online)
+(() => { if (window.__obTrack) return; window.__obTrack = 1;
+  try { let sid = sessionStorage.getItem('ob_sid'); if (!sid) { sid = 'ob' + Math.random().toString(36).slice(2) + Date.now().toString(36); sessionStorage.setItem('ob_sid', sid); }
+    let org = null; try { org = JSON.parse(sessionStorage.getItem('ob_org') || 'null'); } catch (e) {}
+    if (!org) { const q = new URLSearchParams(location.search); let host = ''; try { host = document.referrer ? new URL(document.referrer).hostname.replace(/^www\./, '') : ''; } catch (e) {} if (host === location.hostname.replace(/^www\./, '')) host = '';
+      const M = [[/google\./, 'google', 'organico'], [/bing\.|duckduckgo|yahoo\./, 'busca', 'organico'], [/youtube\.|youtu\.be/, 'youtube', 'social'], [/instagram\./, 'instagram', 'social'], [/facebook\.|fb\./, 'facebook', 'social'], [/whatsapp|wa\.me/, 'whatsapp', 'social'], [/linkedin\./, 'linkedin', 'social'], [/bimcursos\./, 'bim cursos', 'indicacao'], [/uhull/, 'uhull', 'indicacao']];
+      const m = host && M.find(([r]) => r.test(host)); org = { source: q.get('utm_source') || (m ? m[1] : host || 'direto'), medium: q.get('utm_medium') || (m ? m[2] : host ? 'outro site' : 'direto'), campaign: q.get('utm_campaign') || null, ref_host: host || null };
+      try { sessionStorage.setItem('ob_org', JSON.stringify(org)); } catch (e) {} }
+    const dev = matchMedia('(max-width: 800px)').matches ? 'mobile' : 'desktop';
+    const T = (ev) => fetch('/api/t', { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sid, ev, path: location.pathname, device: dev, ...org }) }).catch(() => {});
+    setTimeout(() => T('view'), 1000); setInterval(() => { if (!document.hidden) T('hb'); }, 60000);
+    document.addEventListener('click', (e) => { if (e.target.closest('a[href*="wa.me"]')) T('whatsapp'); if (e.target.closest('.orb')) T('assistente'); }, true);
+  } catch (e) {} })();
