@@ -254,6 +254,7 @@ ${p.prazo ? `<div class="box"><h3>Prazo</h3>${esc(p.prazo)}</div>` : ''}
         for (let i = 0; i < ch.length; i++) v.setInt16(44 + i * 2, Math.max(-1, Math.min(1, ch[i])) * 32767, true); blob = new Blob([buf], { type: 'audio/wav' }); } catch (e) {}
       const data = await new Promise((res) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1]); r.onerror = () => res(''); r.readAsDataURL(blob); });
       let said = ''; try { const ctl = new AbortController(); const to = setTimeout(() => ctl.abort(), 25000); const r = await fetch(SITE.supabaseUrl + '/functions/v1/assistente', { method: 'POST', signal: ctl.signal, headers: { 'content-type': 'application/json', apikey: SITE.supabaseKey }, body: JSON.stringify({ transcrever: { mime: blob.type, data } }) }); clearTimeout(to); said = ((await r.json()).text || '').trim(); } catch (e) {}
+      if (!/[a-zà-ÿ]{2}/i.test(said)) said = '';
       if (!said) { setMode('idle', 'Toque'); vtx.textContent = 'Não entendi. Toque na bolinha e fale de novo, ou digite abaixo.'; return; }
       vtx.textContent = said; setMode('think', 'Pensando…'); const r = await ask(said, true); if (r && vmode) depoisDaResposta(r); };
     mr.start(250); };
