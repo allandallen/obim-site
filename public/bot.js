@@ -40,7 +40,7 @@ const CSS = ".vbar .vb-f{display:flex!important;gap:6px;margin-top:8px}.vbar .vb
   let proto = ss('bot-proto'); const novoProto = () => { proto = 'AT-' + new Date().toISOString().slice(2, 10).replace(/-/g, '') + '-' + Math.random().toString(36).slice(2, 6).toUpperCase(); ss('bot-proto', proto); showProto(); };
   const showProto = () => { const el = $('.bot-win header div > span', box); if (el) { if (el.dataset.sub == null) el.dataset.sub = el.textContent; el.textContent = proto ? 'Protocolo ' + proto : el.dataset.sub; el.style.cssText = 'display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:.74rem'; } };
   const fmt = (t) => esc(t).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/(https?:\/\/[^\s<)]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>').replace(/(^|\s)(\/[a-z][\w\-\/]*\/?)/g, '$1<a href="$2">$2</a>').replace(/\n/g, '<br>');
-  const IR = /\[\[ir:(\/[^\]\s]*)\]\]/;
+  const IR = /\[\[ir:(\/[^\]\s|]*)(?:\|([^\]]*))?\]\]/;
   const PR = /\[\[proposta\]\]([\s\S]*?)\[\[\/proposta\]\]/;
   const add = (role, text) => { text = String(text).replace(IR, '').replace(PR, '').trim(); const p = document.createElement('p'); p.className = 'bot-m ' + (role === 'user' ? 'u' : 'a'); p.innerHTML = fmt(text); log.append(p); log.scrollTop = log.scrollHeight; return p; };
 
@@ -140,12 +140,17 @@ ${p.prazo ? `<div class="box"><h3>Prazo</h3>${esc(p.prazo)}</div>` : ''}
       const vis = visivel(acc); w.innerHTML = fmt(vis); log.scrollTop = log.scrollHeight; if (voiced) vtx.textContent = limpa(vis).slice(-240);
       if (fala) { const corpo = acc.split('[[')[0]; const re = /[^.!?\n]*?[.!?]+(?=\s)|[^\n]+\n/y; re.lastIndex = pos; let m; while ((m = re.exec(corpo))) { fala.add(m[0]); pos = re.lastIndex; } } });
     if (!full0 && modoH) { w.remove(); box.classList.remove('thinking'); tk.textContent = '✓✓'; tk.classList.add('lida'); ss('bot-hist', hist.slice(-16)); setTimeout(poll, 800); return ''; }
-    const full = full0 || 'Não consegui responder agora. Tente de novo em instantes.'; const go = (IR.exec(full) || [])[1], r = full.replace(IR, '').trim();
+    const full = full0 || 'Não consegui responder agora. Tente de novo em instantes.'; const irm = IR.exec(full) || [], go = irm[1], hl = (irm[2] || '').trim(), r = full.replace(IR, '').trim();
     if (fala) { const corpo = full.split('[[')[0]; if (pos < corpo.length) fala.add(corpo.slice(pos)); }
     w.classList.remove('typing'); box.classList.remove('thinking'); w.innerHTML = fmt(visivel(full)); const bub = w; hist.push({ role: 'assistant', content: r.replace(PR, '[proposta gerada]') }); ss('bot-hist', hist.slice(-16));
     const pm = PR.exec(r); if (pm) { try { proposalTools(bub, JSON.parse(pm[1].trim().replace(/^```(json)?|```$/g, ''))); } catch (e) {} }
     if (fala) await fala.fim();
-    if (go) window.open('https://bimcursos.com' + go, '_blank', 'noopener'); return r; };
+    if (hl) { try { sessionStorage.setItem('bot-hl', hl); } catch (e) {} }
+    if (go) { const daqui = /^\/(equipe|sobre|servicos|cases|projetos|contato)?(\/|#|$)/.test(go);
+      if (!daqui) window.open('https://bimcursos.com' + go, '_blank', 'noopener');
+      else if (go.split('#')[0] !== location.pathname) { ss('bot-resume', vmode ? 'voz' : 'txt'); location.href = go; return ''; }
+      else if (go.includes('#')) document.getElementById(go.split('#')[1])?.scrollIntoView({ behavior: 'smooth' }); }
+    if (hl) window.__botHL?.(); return r; };
   const log0 = log.innerHTML;
   hist.forEach((m) => add(m.role, m.content)); showProto();
   // Atendimento ao vivo: quando a equipe assume, as mensagens dela (texto, foto, vídeo, áudio, arquivo) chegam aqui
@@ -254,3 +259,19 @@ ${p.prazo ? `<div class="box"><h3>Prazo</h3>${esc(p.prazo)}</div>` : ''}
   const resume = ss('bot-resume'); if (resume) { sessionStorage.removeItem('bot-resume'); if (resume === 'voz') { voiceOn(true); vtx.textContent = 'Pronto, abri a página. Toque na esfera para continuar.'; } else open(true); }
   setTimeout(() => box.classList.add('hello'), 4000); setTimeout(() => box.classList.remove('hello'), 11000);
 })();
+
+// Guia na tela: a assistente aponta, piscando, o botão ou item onde clicar (também depois de mudar de página)
+(() => { const st = document.createElement('style');
+  st.textContent = '.bot-hl{position:relative;outline:3px solid #ff6a00!important;outline-offset:4px;border-radius:12px;animation:botHL 1s ease-in-out infinite;z-index:5}@keyframes botHL{50%{outline-color:#ffd166;box-shadow:0 0 0 10px rgba(255,106,0,.25)}}.bot-hl-tip{position:absolute;z-index:99990;background:#ff6a00;color:#fff;font:800 .85rem Inter,system-ui,sans-serif;padding:7px 12px;border-radius:999px;box-shadow:0 8px 20px rgba(0,0,0,.35);pointer-events:none;animation:bhtip .9s ease-in-out infinite alternate}@keyframes bhtip{to{transform:translateY(-5px)}}';
+  document.head.append(st);
+  const norm = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim();
+  window.__botHL = () => { let t; try { t = sessionStorage.getItem('bot-hl'); } catch (e) {} if (!t) return; const alvo = norm(t); let n = 0;
+    const tick = setInterval(() => { n++;
+      const els = [...document.querySelectorAll('a, button, summary, label, h1, h2, h3, article, .ob-wc, .ob-rc, .ob-tc, .ob-ec')].filter((e) => e.offsetParent && !e.closest('.bot') && norm(e.textContent).includes(alvo));
+      if (!els.length && n < 40) return; clearInterval(tick); try { sessionStorage.removeItem('bot-hl'); } catch (e) {}
+      const el = els.sort((x, y) => x.textContent.length - y.textContent.length)[0]; if (!el) return;
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.classList.add('bot-hl');
+      const tip = document.createElement('div'); tip.className = 'bot-hl-tip'; tip.textContent = '👆 Clique aqui'; document.body.append(tip);
+      const pos = () => { const r = el.getBoundingClientRect(); tip.style.left = Math.max(8, r.left + scrollX + r.width / 2 - 50) + 'px'; tip.style.top = Math.max(8, r.top + scrollY - 42) + 'px'; }; pos(); const iv = setInterval(pos, 200);
+      const sai = () => { el.classList.remove('bot-hl'); tip.remove(); clearInterval(iv); }; setTimeout(sai, 12000); el.addEventListener('click', sai, { once: true }); }, 300); };
+  setTimeout(() => window.__botHL(), 900); })();
