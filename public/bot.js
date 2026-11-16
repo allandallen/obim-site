@@ -35,7 +35,12 @@ const CSS = ".vbar:not(.big) .vb-head{display:flex!important;order:0;flex:1 1 10
   const vsel = $('.bot-vsel', box), narr = $('.bot-narr', box); vsel.value = voz; narr.checked = narrar;
   vsel.onchange = () => { voz = vsel.value; save(); unlock(); say('Oi! Esta é a minha voz. Pode falar comigo.'); };
   narr.onchange = () => { narrar = narr.checked; save(); if (!narrar) hush(); };
-  const ss = (k, v) => { try { if (v === undefined) return JSON.parse(sessionStorage.getItem(k) || 'null'); sessionStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+  // A conversa (protocolo e histórico) fica guardada neste aparelho e continua no mesmo protocolo por até 12 h sem mensagens.
+  // Fechar a janela não abre protocolo novo; só "Encerrar atendimento" (ou 12 h parado) abre outro.
+  const PERS = /^bot-(proto|hist|nsrv)$/, TTL = 12 * 3600e3;
+  try { const ts = +localStorage.getItem('bot-ts') || 0; if (ts && Date.now() - ts > TTL) ['bot-proto', 'bot-hist', 'bot-nsrv', 'bot-ts'].forEach((k) => localStorage.removeItem(k)); } catch (e) {}
+  const ss = (k, v) => { try { const st = PERS.test(k) ? localStorage : sessionStorage; if (v === undefined) return JSON.parse(st.getItem(k) || 'null');
+    if (v === null) st.removeItem(k); else st.setItem(k, JSON.stringify(v)); if (PERS.test(k)) localStorage.setItem('bot-ts', String(Date.now())); } catch (e) {} };
   const hist = ss('bot-hist') || []; let files = [], vmode = false; let modoH = false;
   let proto = ss('bot-proto'); const novoProto = () => { proto = 'AT-' + new Date().toISOString().slice(2, 10).replace(/-/g, '') + '-' + Math.random().toString(36).slice(2, 6).toUpperCase(); ss('bot-proto', proto); showProto(); };
   const showProto = () => { const el = $('.bot-win header div > span', box); if (el) { if (el.dataset.sub == null) el.dataset.sub = el.textContent; el.textContent = proto ? 'Protocolo ' + proto : el.dataset.sub; el.style.cssText = 'display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:.74rem'; } };
@@ -135,7 +140,7 @@ ${p.prazo ? `<div class="box"><h3>Prazo</h3>${esc(p.prazo)}</div>` : ''}
     const w = add('assistant', '…'); w.classList.add('typing'); box.classList.add('thinking');
     const fala = (narrar || voiced) ? (unlock(), falador()) : null; let pos = 0;
     const visivel = (t) => t.replace(PR, '').replace(/\[\[proposta\]\][\s\S]*$/, '').replace(IR, '').replace(/\[\[[^\]]*$/, '').trim();
-    const full0 = await streamAsk({ messages: hist, files: sendFiles, voice: !!voiced, protocolo: proto }, (acc) => {
+    const full0 = await streamAsk({ messages: leadTxt() ? hist.map((m, i) => (i === 0 && m.role === 'user' ? { ...m, content: leadTxt() + '\n' + m.content } : m)) : hist, lead: LEAD(), files: sendFiles, voice: !!voiced, protocolo: proto }, (acc) => {
       if (w.classList.contains('typing')) { w.classList.remove('typing'); box.classList.remove('thinking'); tk.textContent = '✓✓'; tk.classList.add('lida'); }
       const vis = visivel(acc); w.innerHTML = fmt(vis); log.scrollTop = log.scrollHeight; if (voiced) vtx.textContent = limpa(vis).slice(-240);
       if (fala) { const corpo = acc.split('[[')[0]; const re = /[^.!?\n]*?[.!?]+(?=\s)|[^\n]+\n/y; re.lastIndex = pos; let m; while ((m = re.exec(corpo))) { fala.add(m[0]); pos = re.lastIndex; } } });
@@ -171,11 +176,32 @@ ${p.prazo ? `<div class="box"><h3>Prazo</h3>${esc(p.prazo)}</div>` : ''}
     hist.length = 0; ss('bot-hist', []); proto = null; ss('bot-proto', null); nSrv = 0; ss('bot-nsrv', 0); log.innerHTML = log0; showProto(); };
   setInterval(() => { if (!document.hidden && proto) poll(); }, 4000); setTimeout(poll, 1500);
 
-  const open = (v) => { win.hidden = !v; box.classList.toggle('open', v); if (v) { unlock(); if (!vmode) setTimeout(() => f.q.focus(), 50); } else { hush(); voiceOn(false); } };
+  // Identificação rápida antes do atendimento: nome, e-mail e cidade/UF (uma vez por aparelho); a assistente não pergunta de novo
+  const LEAD = () => { try { return JSON.parse(localStorage.getItem('bot-lead') || 'null'); } catch (e) { return null; } };
+  const leadTxt = () => { const l = LEAD(); return l ? `[Dados do cliente, já informados: nome ${l.nome}; e-mail ${l.email}; cidade ${l.cidade}. Não pergunte esses dados de novo.]` : ''; };
+  const pedeLead = (depois) => { if (LEAD()) { depois?.(); return; } win.hidden = false; box.classList.add('open'); if ($('.bot-lead', win)) return;
+    const u = {}; const fm = document.createElement('form'); fm.className = 'bot-lead';
+    fm.style.cssText = 'position:absolute;inset:auto 0 0 0;top:64px;z-index:5;background:linear-gradient(180deg,#121a35,#0b1020);padding:18px 16px;display:flex;flex-direction:column;gap:10px;overflow:auto;color:#e8ecf5';
+    const ip = 'width:100%;min-height:46px;border-radius:14px;border:1px solid rgba(255,255,255,.2);background:rgba(0,0,0,.25);color:#fff;padding:0 14px;font:500 1rem Inter,system-ui,sans-serif';
+    fm.innerHTML = `<b style="font:800 1.15rem Inter,system-ui,sans-serif">👋 Antes de começar</b><span style="color:#94a3b8;font-size:.9rem">Para te atender melhor (e mandar a proposta ou a resposta por e-mail), preencha só uma vez:</span>
+      <input name="nome" required minlength="3" placeholder="Seu nome completo" autocomplete="name" style="${ip}" value="${esc(u.nome || '')}">
+      <input name="email" type="email" required placeholder="Seu e-mail" autocomplete="email" inputmode="email" style="${ip}" value="${esc(u.email || '')}">
+      <input name="cidade" required minlength="3" placeholder="Sua cidade e estado (ex.: Santarém/PA)" autocomplete="address-level2" style="${ip}">
+      <button style="min-height:50px;border:0;border-radius:999px;background:#ff6a00;color:#fff;font:800 1rem Inter,system-ui,sans-serif;cursor:pointer">Começar atendimento →</button>
+      <small style="color:#64748b">Seus dados ficam só com a nossa equipe, para responder você.</small>`;
+    fm.onsubmit = (e) => { e.preventDefault(); const d = Object.fromEntries(new FormData(fm)); if (!/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(d.email.trim())) { fm.email.focus(); return; }
+      try { localStorage.setItem('bot-lead', JSON.stringify({ nome: d.nome.trim(), email: d.email.trim().toLowerCase(), cidade: d.cidade.trim() })); } catch (er) {}
+      fm.remove(); add('assistant', `Prazer, ${esc(d.nome.trim().split(' ')[0])}! 😊 Como posso te ajudar?`); depois?.(); };
+    $('header', win).after(fm); setTimeout(() => (u.email ? fm.cidade : fm.nome).focus(), 80); };
+  const open = (v) => { win.hidden = !v; box.classList.toggle('open', v); if (v) { unlock(); if (!LEAD()) { pedeLead(); return; } if (!vmode) setTimeout(() => f.q.focus(), 50); } else { hush(); voiceOn(false); } };
   document.addEventListener('click', (e) => { if (e.target.closest('[data-open-bot]')) { unlock(); voiceOn(false); open(true); } });
   $('.orb', box).onclick = () => { unlock(); if (vmode) { voiceOn(false); return; } if (!win.hidden) { open(false); return; } voiceOn(true); };
-  $('.bot-x', box).onclick = async () => { if (proto && hist.length && !confirm('Encerrar este atendimento (protocolo ' + proto + ')? Se escrever de novo, um novo protocolo será aberto.')) { open(false); return; } open(false); await encerrar(); };
-  $('.bot-x', box).title = 'Encerrar atendimento';
+  // ✕ só minimiza (a conversa continua no mesmo protocolo); o botão "Encerrar" finaliza o atendimento
+  $('.bot-x', box).onclick = () => open(false); $('.bot-x', box).title = 'Fechar (a conversa continua salva)';
+  { const eb = document.createElement('button'); eb.type = 'button'; eb.className = 'bot-end'; eb.textContent = 'Encerrar'; eb.title = 'Encerrar este atendimento';
+    eb.style.cssText = 'border:1px solid rgba(255,255,255,.25);background:transparent;color:inherit;border-radius:999px;padding:6px 10px;font:700 .75rem Inter,system-ui,sans-serif;cursor:pointer;margin-left:auto;margin-right:6px';
+    eb.onclick = async () => { if (!proto || !hist.length) { open(false); return; } if (!confirm('Encerrar o atendimento ' + proto + '? Na próxima mensagem abre um protocolo novo.')) return; open(false); await encerrar(); };
+    $('.bot-x', box).before(eb); }
   $$('.bot-sug button', box).forEach((b) => (b.onclick = () => { unlock(); ask(b.textContent); }));
   f.onsubmit = (e) => { e.preventDefault(); unlock(); const q = f.q.value; f.q.value = ''; ask(q); };
   $('[data-k=file]', f).onclick = () => fin.click();
@@ -201,8 +227,29 @@ ${p.prazo ? `<div class="box"><h3>Prazo</h3>${esc(p.prazo)}</div>` : ''}
     raf = requestAnimationFrame(draw); };
   const setMode = (m, t) => { mode = m; st.textContent = t; vbox.dataset.m = m; vbox.classList.toggle('big', m === 'idle'); };
   const stopMic = () => { try { stream?.getTracks().forEach((t) => t.stop()); } catch (e) {} stream = null; mic = null; };
+  // iPhone e navegadores sem reconhecimento de voz: grava a fala, detecta a pausa e a assistente transcreve no servidor
+  const gravaEscuta = async () => {
+    if (rec) { try { rec.stop(); } catch (e) {} return; }
+    if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) { setMode('idle', 'Sem voz'); vtx.textContent = 'Este navegador não grava áudio. Digite no campo abaixo.'; return; }
+    let st; try { st = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }); } catch (e) { setMode('idle', 'Microfone bloqueado'); vtx.textContent = 'Libere o microfone para este site nas configurações do navegador, ou digite abaixo.'; return; }
+    const mime = ['audio/mp4', 'audio/webm;codecs=opus', 'audio/webm', 'audio/ogg'].find((t) => MediaRecorder.isTypeSupported?.(t)) || '';
+    const mr = new MediaRecorder(st, mime ? { mimeType: mime } : undefined); const parts = []; mr.ondataavailable = (e) => e.data.size && parts.push(e.data);
+    stream = st; try { mic = ac.createAnalyser(); mic.fftSize = 512; mbuf = new Uint8Array(mic.frequencyBinCount); ac.createMediaStreamSource(st).connect(mic); } catch (e) { mic = null; }
+    const d = new Uint8Array(512); let falou = 0, quieto = 0; const t0 = Date.now(); let vad = 0;
+    rec = { stop: () => { try { mr.state !== 'inactive' && mr.stop(); } catch (e) {} } };
+    setMode('listen', 'Ouvindo… fale à vontade'); vtx.textContent = 'Pode falar… eu espero você terminar';
+    vad = setInterval(() => { if (!mic) return; const an2 = mic; const buf2 = new Uint8Array(an2.fftSize); an2.getByteTimeDomainData(buf2); let e = 0; for (const x of buf2) e += (x - 128) ** 2; e = Math.sqrt(e / buf2.length);
+      if (e > 6) { falou += 100; quieto = 0; } else quieto += 100;
+      if ((falou > 300 && quieto > 1700) || Date.now() - t0 > 45000 || (!falou && Date.now() - t0 > 9000)) rec?.stop(); }, 100);
+    mr.onstop = async () => { clearInterval(vad); rec = null; stopMic(); if (!falou) { setMode('idle', 'Toque'); vtx.textContent = 'Não ouvi nada. Toque na bolinha e fale.'; return; }
+      setMode('think', 'Entendendo…'); vtx.textContent = 'Entendendo o que você falou…';
+      const blob = new Blob(parts, { type: mr.mimeType || mime || 'audio/mp4' }); const data = await new Promise((res) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1]); r.readAsDataURL(blob); });
+      let said = ''; try { const r = await fetch(SITE.supabaseUrl + '/functions/v1/assistente', { method: 'POST', headers: { 'content-type': 'application/json', apikey: SITE.supabaseKey }, body: JSON.stringify({ transcrever: { mime: blob.type, data } }) }); said = ((await r.json()).text || '').trim(); } catch (e) {}
+      if (!said) { setMode('idle', 'Toque'); vtx.textContent = 'Não entendi. Toque na bolinha e fale de novo, ou digite abaixo.'; return; }
+      vtx.textContent = said; setMode('think', 'Pensando…'); const r = await ask(said, true); if (r && vmode) depoisDaResposta(r); };
+    mr.start(250); };
   const listen = async () => { unlock(); vbox.classList.remove('toque'); if (mode === 'speak') { hush(); }
-    if (!SR) { setMode('idle', 'Sem voz'); vtx.textContent = 'Seu navegador não reconhece voz. Use o Chrome ou toque em 💬 para digitar.'; return; }
+    if (!SR || /iPhone|iPad|iPod/.test(navigator.userAgent)) return gravaEscuta();
     if (rec) { rec.stop(); return; }
     bargeOff(); rec = new SR(); rec.lang = 'pt-BR'; rec.interimResults = true; rec.continuous = !/Android|iPhone|iPad|Mobi/i.test(navigator.userAgent); let said = '', tmr = 0; setMode('listen', 'Sua vez, pode falar à vontade'); vtx.textContent = 'Pode falar… eu espero você terminar';
     // só encerra depois de uma pausa de verdade (não corta no meio da frase)
@@ -232,7 +279,7 @@ ${p.prazo ? `<div class="box"><h3>Prazo</h3>${esc(p.prazo)}</div>` : ''}
     if (/iPhone|iPad|iPod/.test(navigator.userAgent)) { setMode('idle', 'Toque para responder'); vbox.classList.add('toque'); vtx.textContent = pede ? '👆 Toque na bolinha e fale, ou digite no campo laranja' : '👆 Toque na bolinha para responder'; return; }
     // continua ouvindo; se a pessoa tocar no campo para digitar, a escuta pausa sozinha
     setTimeout(() => { if (!rec && mode !== 'listen' && !box.dataset.stop) { listen(); if (pede) setTimeout(() => { vtx.textContent = 'Pode falar, ou digite no campo laranja: ' + pede[1].replace('Digite aqui ', ''); }, 50); } }, 350); };
-  const voiceOn = (v) => { vmode = v; vbox.hidden = !v; box.classList.toggle('voice', v); if (v) { win.hidden = true; box.classList.remove('open'); }
+  const voiceOn = (v) => { if (v && !LEAD()) { pedeLead(() => { voiceOn(true); listen(); }); return; } vmode = v; vbox.hidden = !v; box.classList.toggle('voice', v); if (v) { win.hidden = true; box.classList.remove('open'); }
     $$('.bot-tabs button', box).forEach((b) => b.setAttribute('aria-selected', String((b.dataset.t === 'voz') === v)));
     cancelAnimationFrame(raf); if (v) { setMode('idle', 'Toque'); vtx.textContent = 'Toque na bolinha e fale'; raf = requestAnimationFrame(draw); } else { box.dataset.stop = 1; rec?.stop(); stopMic(); } };
   cv.onclick = () => { delete box.dataset.stop; listen(); };
