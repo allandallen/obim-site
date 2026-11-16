@@ -75,7 +75,18 @@ const CSS = ".bot{--bg2:#0e1222;--tx:#e8ecf5;--line:rgba(255,255,255,.12);--mut:
     for (;;) { const { done, value } = await rd.read(); if (done) break; bf += dec.decode(value, { stream: true }); let i;
       while ((i = bf.indexOf('\n\n')) >= 0) { const d = bf.slice(0, i).replace(/^data: ?/, ''); bf = bf.slice(i + 2); if (d === '[DONE]') continue; try { const o = JSON.parse(d); if (o.t) { acc += o.t; onText(acc); } } catch (e) {} } }
     return acc; };
-  const speaking = (v) => { box.classList.toggle('speaking', v); if (vmode) setMode(v ? 'speak' : 'idle', v ? 'Falando…' : 'Toque'); };
+  const speaking = (v) => { box.classList.toggle('speaking', v); if (vmode) { setMode(v ? 'speak' : 'idle', v ? 'Falando… (pode me interromper)' : 'Toque'); v ? bargeOn() : bargeOff(); } };
+  // Interromper: enquanto a assistente fala, o microfone fica atento; se você começar a falar, ela para e escuta
+  let bargeSt = null, bargeRaf = 0;
+  const bargeOff = () => { cancelAnimationFrame(bargeRaf); try { bargeSt?.getTracks().forEach((t) => t.stop()); } catch (e) {} bargeSt = null; };
+  const bargeOn = async () => { if (bargeSt || !ac || !navigator.mediaDevices?.getUserMedia || /iPhone|iPad|iPod/.test(navigator.userAgent)) return;
+    try { const s = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: false } });
+      if (mode !== 'speak' || bargeSt) { s.getTracks().forEach((t) => t.stop()); return; } bargeSt = s;
+      const a = ac.createAnalyser(); a.fftSize = 512; ac.createMediaStreamSource(s).connect(a); const d = new Uint8Array(a.fftSize); let alto = 0, base = 0, n = 0;
+      const loop = () => { if (!bargeSt) return; a.getByteTimeDomainData(d); let e = 0; for (const x of d) e += (x - 128) ** 2; e = Math.sqrt(e / d.length);
+        if (n < 20) { base = (base * n + e) / (n + 1); n++; } else { alto = e > Math.max(7, base * 2.6) ? alto + 1 : Math.max(0, alto - 1);
+          if (alto > 9) { bargeOff(); hush(); box.classList.remove('speaking'); mode = 'idle'; listen(); return; } }
+        bargeRaf = requestAnimationFrame(loop); }; loop(); } catch (e) {} };
 
   // ---- Proposta de honorários Office BIM: PDF com timbre, WhatsApp do próprio cliente e e-mail ----
   const ASSET = 'https://bimcursos-plataforma.pages.dev/assets/brand/';
@@ -182,12 +193,13 @@ ${p.prazo ? `<div class="box"><h3>Prazo</h3>${esc(p.prazo)}</div>` : ''}
   const listen = async () => { unlock(); if (mode === 'speak') { hush(); }
     if (!SR) { setMode('idle', 'Sem voz'); vtx.textContent = 'Seu navegador não reconhece voz. Use o Chrome ou toque em 💬 para digitar.'; return; }
     if (rec) { rec.stop(); return; }
-    rec = new SR(); rec.lang = 'pt-BR'; rec.interimResults = true; let said = ''; setMode('listen', 'Sua vez'); vtx.textContent = 'Pode falar…';
-    rec.onresult = (e) => { said = [...e.results].map((r) => r[0].transcript).join(''); vtx.textContent = said; };
+    bargeOff(); rec = new SR(); rec.lang = 'pt-BR'; rec.interimResults = true; rec.continuous = true; let said = '', tmr = 0; setMode('listen', 'Sua vez, pode falar à vontade'); vtx.textContent = 'Pode falar… eu espero você terminar';
+    // só encerra depois de uma pausa de verdade (não corta no meio da frase)
+    rec.onresult = (e) => { said = [...e.results].map((r) => r[0].transcript).join(' ').replace(/\s+/g, ' ').trim(); vtx.textContent = said; clearTimeout(tmr); tmr = setTimeout(() => { try { rec?.stop(); } catch (er) {} }, 2000); };
     rec.onerror = () => {};
     rec.onend = async () => { rec = null; stopMic(); if (!said.trim()) { setMode('idle', 'Toque'); vtx.textContent = 'Toque na bolinha e fale'; return; }
       setMode('think', 'Pensando…'); const r = await ask(said, true);
-      if (r && vmode && !box.dataset.stop) setTimeout(listen, 350); };
+      if (r && vmode && !box.dataset.stop) setTimeout(() => { if (!rec && mode !== 'listen') listen(); }, 350); };
     delete box.dataset.stop; try { rec.start(); } catch (e) {}
     if (!/iPhone|iPad|iPod/.test(navigator.userAgent)) navigator.mediaDevices?.getUserMedia({ audio: true }).then((st) => { if (!rec) { st.getTracks().forEach((t) => t.stop()); return; } stream = st; mic = ac.createAnalyser(); mic.fftSize = 64; mbuf = new Uint8Array(mic.frequencyBinCount); ac.createMediaStreamSource(st).connect(mic); }).catch(() => {}); };
   const vbtn = $('[data-v=voz]', box), showVoz = () => { const fem = !/Charon|Puck/.test(voz); vbtn.textContent = fem ? '👩' : '👨'; vbtn.title = 'Voz: ' + (VOZES.find((x) => x[0] === voz) || [, ''])[1] + ' (toque para trocar)'; }; showVoz();
