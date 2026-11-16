@@ -245,8 +245,15 @@ ${p.prazo ? `<div class="box"><h3>Prazo</h3>${esc(p.prazo)}</div>` : ''}
       if ((falou > 300 && quieto > 1700) || Date.now() - t0 > 45000 || (!falou && Date.now() - t0 > 9000)) rec?.stop(); }, 100);
     mr.onstop = async () => { clearInterval(vad); rec = null; stopMic(); if (!falou) { setMode('idle', 'Toque'); vtx.textContent = 'Não ouvi nada. Toque na bolinha e fale.'; return; }
       setMode('think', 'Entendendo…'); vtx.textContent = 'Entendendo o que você falou…';
-      const blob = new Blob(parts, { type: mr.mimeType || mime || 'audio/mp4' }); const data = await new Promise((res) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1]); r.readAsDataURL(blob); });
-      let said = ''; try { const r = await fetch(SITE.supabaseUrl + '/functions/v1/assistente', { method: 'POST', headers: { 'content-type': 'application/json', apikey: SITE.supabaseKey }, body: JSON.stringify({ transcrever: { mime: blob.type, data } }) }); said = ((await r.json()).text || '').trim(); } catch (e) {}
+      let blob = new Blob(parts, { type: mr.mimeType || mime || 'audio/mp4' });
+      // converte para WAV 16 kHz mono (formato que a IA sempre entende); se não der, manda o original
+      try { const ab = await blob.arrayBuffer(); const au = await new Promise((ok, no) => { const p = ac.decodeAudioData(ab.slice(0), ok, no); if (p?.then) p.then(ok, no); });
+        const sr = 16000, len = Math.ceil(au.duration * sr), oc = new OfflineAudioContext(1, len, sr); const s = oc.createBufferSource(); s.buffer = au; s.connect(oc.destination); s.start(); const rb = await oc.startRendering(); const ch = rb.getChannelData(0);
+        const buf = new ArrayBuffer(44 + ch.length * 2), v = new DataView(buf), w = (o, t) => [...t].forEach((c, i) => v.setUint8(o + i, c.charCodeAt(0)));
+        w(0, 'RIFF'); v.setUint32(4, 36 + ch.length * 2, true); w(8, 'WAVE'); w(12, 'fmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true); v.setUint32(24, sr, true); v.setUint32(28, sr * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true); w(36, 'data'); v.setUint32(40, ch.length * 2, true);
+        for (let i = 0; i < ch.length; i++) v.setInt16(44 + i * 2, Math.max(-1, Math.min(1, ch[i])) * 32767, true); blob = new Blob([buf], { type: 'audio/wav' }); } catch (e) {}
+      const data = await new Promise((res) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1]); r.onerror = () => res(''); r.readAsDataURL(blob); });
+      let said = ''; try { const ctl = new AbortController(); const to = setTimeout(() => ctl.abort(), 25000); const r = await fetch(SITE.supabaseUrl + '/functions/v1/assistente', { method: 'POST', signal: ctl.signal, headers: { 'content-type': 'application/json', apikey: SITE.supabaseKey }, body: JSON.stringify({ transcrever: { mime: blob.type, data } }) }); clearTimeout(to); said = ((await r.json()).text || '').trim(); } catch (e) {}
       if (!said) { setMode('idle', 'Toque'); vtx.textContent = 'Não entendi. Toque na bolinha e fale de novo, ou digite abaixo.'; return; }
       vtx.textContent = said; setMode('think', 'Pensando…'); const r = await ask(said, true); if (r && vmode) depoisDaResposta(r); };
     mr.start(250); };
