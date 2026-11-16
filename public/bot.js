@@ -129,6 +129,7 @@ ${p.prazo ? `<div class="box"><h3>Prazo</h3>${esc(p.prazo)}</div>` : ''}
     const pm = PR.exec(r); if (pm) { try { proposalTools(bub, JSON.parse(pm[1].trim().replace(/^```(json)?|```$/g, ''))); } catch (e) {} }
     if (fala) await fala.fim();
     if (go) window.open('https://bimcursos.com' + go, '_blank', 'noopener'); return r; };
+  const log0 = log.innerHTML;
   hist.forEach((m) => add(m.role, m.content)); showProto();
   // Atendimento ao vivo: quando a equipe assume, as mensagens dela (texto, foto, vídeo, áudio, arquivo) chegam aqui
   let nSrv = ss('bot-nsrv') || 0;
@@ -141,13 +142,18 @@ ${p.prazo ? `<div class="box"><h3>Prazo</h3>${esc(p.prazo)}</div>` : ''}
       const j = await r.json(); if (!j || typeof j !== 'object') return; modoH = j.modo === 'humano'; box.classList.toggle('humano', modoH);
       const novas = j.msgs || []; novas.forEach((m) => { addH(m); if (m.role === 'human' && m.content) hist.push({ role: 'assistant', content: '[' + (m.by || 'Equipe') + '] ' + m.content }); });
       if (novas.length) { ss('bot-hist', hist.slice(-16)); if (win.hidden && novas.some((m) => m.role === 'human')) open(true); }
-      nSrv = j.total || nSrv; ss('bot-nsrv', nSrv); } catch (e) {} };
+      nSrv = j.total || nSrv; ss('bot-nsrv', nSrv);
+      if (j.encerrado && proto) { addH({ role: 'sistema', content: 'Atendimento ' + proto + ' encerrado. Se precisar, é só escrever: um novo protocolo será aberto.' }); proto = null; ss('bot-proto', null); nSrv = 0; ss('bot-nsrv', 0); hist.length = 0; ss('bot-hist', []); showProto(); } } catch (e) {} };
+  // X: encerra o atendimento (a próxima conversa recebe um protocolo novo)
+  const encerrar = async () => { if (proto && hist.length) { const p = proto; try { await fetch(SITE.supabaseUrl + '/rest/v1/rpc/chat_encerrar', { method: 'POST', headers: { apikey: SITE.supabaseKey, 'content-type': 'application/json' }, body: JSON.stringify({ p_proto: p }) }); } catch (e) {} }
+    hist.length = 0; ss('bot-hist', []); proto = null; ss('bot-proto', null); nSrv = 0; ss('bot-nsrv', 0); log.innerHTML = log0; showProto(); };
   setInterval(() => { if (!document.hidden && proto) poll(); }, 4000); setTimeout(poll, 1500);
 
   const open = (v) => { win.hidden = !v; box.classList.toggle('open', v); if (v) { unlock(); if (!vmode) setTimeout(() => f.q.focus(), 50); } else { hush(); voiceOn(false); } };
   document.addEventListener('click', (e) => { if (e.target.closest('[data-open-bot]')) { unlock(); voiceOn(false); open(true); } });
   $('.orb', box).onclick = () => { unlock(); if (vmode) { voiceOn(false); return; } if (!win.hidden) { open(false); return; } voiceOn(true); };
-  $('.bot-x', box).onclick = () => open(false);
+  $('.bot-x', box).onclick = async () => { if (proto && hist.length && !confirm('Encerrar este atendimento (protocolo ' + proto + ')? Se escrever de novo, um novo protocolo será aberto.')) { open(false); return; } open(false); await encerrar(); };
+  $('.bot-x', box).title = 'Encerrar atendimento';
   $$('.bot-sug button', box).forEach((b) => (b.onclick = () => { unlock(); ask(b.textContent); }));
   f.onsubmit = (e) => { e.preventDefault(); unlock(); const q = f.q.value; f.q.value = ''; ask(q); };
   $('[data-k=file]', f).onclick = () => fin.click();
