@@ -38,7 +38,7 @@ const CSS = ".bot{--bg2:#0e1222;--tx:#e8ecf5;--line:rgba(255,255,255,.12);--mut:
   const ss = (k, v) => { try { if (v === undefined) return JSON.parse(sessionStorage.getItem(k) || 'null'); sessionStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
   const hist = ss('bot-hist') || []; let files = [], vmode = false; let modoH = false;
   let proto = ss('bot-proto'); const novoProto = () => { proto = 'AT-' + new Date().toISOString().slice(2, 10).replace(/-/g, '') + '-' + Math.random().toString(36).slice(2, 6).toUpperCase(); ss('bot-proto', proto); showProto(); };
-  const showProto = () => { const el = $('.bot-win header span', box); if (el) el.textContent = proto ? 'Protocolo ' + proto : 'fala, ouve e lê arquivos'; };
+  const showProto = () => { const el = $('.bot-win header div > span', box); if (el) { if (el.dataset.sub == null) el.dataset.sub = el.textContent; el.textContent = proto ? 'Protocolo ' + proto : el.dataset.sub; el.style.cssText = 'display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:.74rem'; } };
   const fmt = (t) => esc(t).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/(https?:\/\/[^\s<)]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>').replace(/(^|\s)(\/[a-z][\w\-\/]*\/?)/g, '$1<a href="$2">$2</a>').replace(/\n/g, '<br>');
   const IR = /\[\[ir:(\/[^\]\s]*)\]\]/;
   const PR = /\[\[proposta\]\]([\s\S]*?)\[\[\/proposta\]\]/;
@@ -61,7 +61,7 @@ const CSS = ".bot{--bg2:#0e1222;--tx:#e8ecf5;--line:rgba(255,255,255,.12);--mut:
   const limpa = (t) => t.replace(/https?:\/\/\S+/g, '').replace(/(^|\s)\/[a-z][\w\-\/]*\/?/g, ' ').replace(/[*#_`>|•]/g, '').replace(/[\u{1F000}-\u{1FFFF}\u2600-\u27BF\uFE0F]/gu, '').replace(/\s+/g, ' ').trim();
   // Fala em cascata: cada frase pronta já vai para a voz enquanto o resto ainda chega
   const falador = () => { let chain = Promise.resolve(), total = 0, cut = false, stop = false; curStop = () => { stop = true; };
-    return { add: (frase) => { if (stop || cut) return; let t = limpa(frase); if (t.length < 2) return; if (total + t.length > 1100) { cut = true; t = vmode ? 'O resto, com valores e detalhes, está escrito aqui. Toque no balãozinho de conversa para ver.' : 'O resto está escrito aqui embaixo.'; } total += t.length;
+    return { add: (frase) => { if (stop || cut) return; let t = limpa(frase); if (t.length < 2) return; if (total + t.length > 1100) { cut = true; if (vmode) mostraTexto(); t = vmode ? 'O resto, com valores e detalhes, está escrito aqui. Toque no balãozinho de conversa para ver.' : 'O resto está escrito aqui embaixo.'; } total += t.length;
         const pr = ttsFetch(t); chain = chain.then(async () => { if (stop) return; speaking(true); const d = await pr; if (stop) return; if (d?.audio && ac) await playPCM(d); else await browserSay(t); }); },
       fim: async () => { await chain; an = null; if (!stop) speaking(false); } }; };
   const say = async (t) => { hush(); unlock(); const f = falador(); (limpa(t).match(/[^.!?]+[.!?]*/g) || []).forEach(f.add); await f.fim(); };
@@ -95,12 +95,12 @@ const CSS = ".bot{--bg2:#0e1222;--tx:#e8ecf5;--line:rgba(255,255,255,.12);--mut:
   const pdfProposta = (p) => { const w = window.open('', '_blank'); if (!w) { add('assistant', 'Seu navegador bloqueou a janela do PDF. Libere pop-ups e toque de novo.'); return; }
     const hoje = new Date(), val = new Date(Date.now() + 15 * 864e5), d = (x) => x.toLocaleDateString('pt-BR');
     w.document.write(`<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Proposta ${esc(p.numero)} - Office BIM</title><style>
-@page{size:A4;margin:16mm 14mm}*{box-sizing:border-box}body{font:13px/1.5 Inter,Arial,sans-serif;color:#0f172a;margin:0}
+@page{size:A4;margin:0}*{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}body{font:13px/1.5 Inter,Arial,sans-serif;color:#0f172a;margin:0;padding:14mm 14mm 12mm}
 .hd{display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid #ff6a00;padding-bottom:12px}.hd img{height:54px}.hd .co{text-align:right;font-size:11px;color:#475569}
 .hd b{font-size:18px;color:#0b1b3a;display:block}h1{font-size:20px;margin:18px 0 4px;color:#0b1b3a}.meta{display:flex;gap:24px;font-size:12px;color:#475569;margin-bottom:14px}
-.box{border:1px solid #e2e8f0;border-radius:10px;padding:12px 14px;margin:10px 0}.box h3{margin:0 0 6px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#ff6a00}
-table{width:100%;border-collapse:collapse;margin-top:6px}th{background:#0b1b3a;color:#fff;text-align:left;font-size:11px;padding:7px 8px}td{padding:7px 8px;border-bottom:1px solid #e2e8f0;font-size:12px}td.n,th.n{text-align:right;white-space:nowrap}
-.tot{display:flex;justify-content:flex-end;margin-top:10px}.tot div{background:linear-gradient(135deg,#ff6a00,#ff9a3c);color:#fff;padding:10px 18px;border-radius:10px;font-size:16px;font-weight:800}
+.box{border:1px solid #fed7aa;border-left:4px solid #ff6a00;border-radius:10px;padding:12px 14px;margin:10px 0;background:#fffaf5}.box h3{margin:0 0 6px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#ff6a00}
+table{width:100%;border-collapse:collapse;margin-top:6px}th{background:#0b1b3a;color:#fff;text-align:left;font-size:11px;padding:7px 8px}td{padding:7px 8px;border-bottom:1px solid #fde3c8;font-size:12px}tbody tr:nth-child(even) td{background:#fff3e6}td.n,th.n{text-align:right;white-space:nowrap}
+.tot{display:flex;justify-content:flex-end;margin-top:12px}.tot div{background:linear-gradient(135deg,#0b1b3a,#1e3a8a);color:#fff;padding:12px 22px;border-radius:12px;font-size:13px;font-weight:600;text-align:right;border:3px solid #ff6a00}.tot div b{display:block;font-size:26px;font-weight:900;color:#ffb36b;letter-spacing:-.01em}
 .obs{font-size:11px;color:#475569}.sig{margin-top:28px;text-align:center}.sig img{height:60px}.sig p{margin:0;border-top:1px solid #94a3b8;display:inline-block;padding:4px 30px 0;font-size:12px}
 .ft{margin-top:22px;font-size:10px;color:#64748b;text-align:center;border-top:1px solid #e2e8f0;padding-top:8px}.no-print{position:fixed;top:10px;right:10px}@media print{.no-print{display:none}}
 </style></head><body><button class="no-print" onclick="print()" style="padding:10px 16px;border:0;border-radius:8px;background:#ff6a00;color:#fff;font-weight:700;cursor:pointer">Salvar em PDF / Imprimir</button>
@@ -111,7 +111,7 @@ table{width:100%;border-collapse:collapse;margin-top:6px}th{background:#0b1b3a;c
 <div class="box"><h3>Objeto</h3>${esc(p.servico || '')}${p.descricao ? '<br><span class="obs">' + esc(p.descricao) + '</span>' : ''}</div>
 <div class="box"><h3>Composição dos honorários</h3><table><thead><tr><th>Item</th><th class="n">Qtd.</th><th class="n">Un.</th><th class="n">Unitário</th><th class="n">Subtotal</th></tr></thead><tbody>
 ${(p.itens || []).map((i) => `<tr><td>${esc(i.desc)}</td><td class="n">${esc(i.qtd ?? '')}</td><td class="n">${esc(i.un ?? '')}</td><td class="n">${i.unit != null ? brl(i.unit) : ''}</td><td class="n">${brl(i.total)}</td></tr>`).join('')}
-</tbody></table><div class="tot"><div>Total estimado: ${brl(p.total)}</div></div></div>
+</tbody></table><div class="tot"><div>Custo estimado do projeto<b>${brl(p.total)}</b></div></div></div>
 ${p.prazo ? `<div class="box"><h3>Prazo</h3>${esc(p.prazo)}</div>` : ''}
 <div class="box"><h3>Condições</h3><div class="obs">${esc(p.obs || '')}<br>Valores de referência com base no Manual de Honorários Office BIM 2026 (máximos CEHOP 2026). Proposta final após análise técnica do escopo, documentos e visita, se necessária. Projetos desenvolvidos em BIM com ART/RRT.</div></div>
 <div class="sig"><img src="${ASSET}assinatura.webp" alt=""><br><p>Eng. Civil Allan Dallen Almeida de Sousa · CREA 151156943-3<br>Office BIM - Edificações e Infraestrutura</p></div>
@@ -120,7 +120,7 @@ ${p.prazo ? `<div class="box"><h3>Prazo</h3>${esc(p.prazo)}</div>` : ''}
   const proposalTools = (bub, p) => { p.numero = p.numero || 'OB-' + new Date().toISOString().slice(2, 10).replace(/-/g, '') + '-' + Math.random().toString(36).slice(2, 6).toUpperCase();
     const bar = document.createElement('div'); bar.className = 'bot-prop';
     bar.innerHTML = `<b>📄 Proposta ${esc(p.numero)} · ${brl(p.total)}</b><div><button type="button" data-a="pdf">Baixar PDF</button><button type="button" data-a="mail">Enviar por e-mail</button></div>`;
-    bub.after(bar); log.scrollTop = log.scrollHeight;
+    bub.after(bar); log.scrollTop = log.scrollHeight; if (vmode) mostraTexto('📄 Ver a proposta, baixar o PDF ou enviar por e-mail');
     $('[data-a=pdf]', bar).onclick = () => pdfProposta(p);
     $('[data-a=mail]', bar).onclick = async (ev) => { const bt = ev.currentTarget; let para = (p.email || '').trim();
       if (!para) para = (prompt('Para qual e-mail eu envio a proposta?') || '').trim(); if (!para) return; p.email = para;
@@ -211,6 +211,13 @@ ${p.prazo ? `<div class="box"><h3>Prazo</h3>${esc(p.prazo)}</div>` : ''}
   const vbtn = $('[data-v=voz]', box), showVoz = () => { const fem = !/Charon|Puck/.test(voz); vbtn.textContent = fem ? '👩' : '👨'; vbtn.title = 'Voz: ' + (VOZES.find((x) => x[0] === voz) || [, ''])[1] + ' (toque para trocar)'; }; showVoz();
   vbtn.onclick = () => { unlock(); const i = VOZES.findIndex((x) => x[0] === voz); voz = VOZES[(i + 1) % VOZES.length][0]; vsel.value = voz; save(); showVoz(); say('Oi, esta é a voz ' + VOZES.find((x) => x[0] === voz)[1].toLowerCase() + '.'); };
   vsel.addEventListener('change', showVoz);
+  // No modo voz, quando a resposta tem detalhes escritos (orçamento, lista), aparece um botão em destaque para ver e continuar
+  const mostraTexto = (rot) => { const vb = $('.bot-voice', box); if (!vb) return; let b = $('.vb-ver', vb);
+    if (!b) { b = document.createElement('button'); b.type = 'button'; b.className = 'vb-ver'; b.style.cssText = 'display:block;margin:10px auto 0;padding:12px 18px;border:0;border-radius:999px;background:#ff6a00;color:#fff;font:800 .95rem Inter,system-ui,sans-serif;box-shadow:0 0 0 0 rgba(255,106,0,.6);animation:vbpulse 1.6s infinite;cursor:pointer';
+      if (!document.getElementById('vbpulse-css')) { const s = document.createElement('style'); s.id = 'vbpulse-css'; s.textContent = '@keyframes vbpulse{70%{box-shadow:0 0 0 12px rgba(255,106,0,0)}100%{box-shadow:0 0 0 0 rgba(255,106,0,0)}}'; document.head.append(s); }
+      b.onclick = () => { hush(); voiceOn(false); win.hidden = false; box.classList.add('open'); b.remove(); setTimeout(() => { log.scrollTop = log.scrollHeight; f.q.focus(); }, 80); };
+      ($('.vb-btn', vb) || vb).before(b); }
+    b.textContent = rot || '📄 Ver tudo escrito e continuar a conversa'; };
   const voiceOn = (v) => { vmode = v; vbox.hidden = !v; box.classList.toggle('voice', v); if (v) { win.hidden = true; box.classList.remove('open'); }
     $$('.bot-tabs button', box).forEach((b) => b.setAttribute('aria-selected', String((b.dataset.t === 'voz') === v)));
     cancelAnimationFrame(raf); if (v) { setMode('idle', 'Toque'); vtx.textContent = 'Toque na bolinha e fale'; raf = requestAnimationFrame(draw); } else { box.dataset.stop = 1; rec?.stop(); stopMic(); } };
