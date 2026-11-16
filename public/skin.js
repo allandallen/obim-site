@@ -249,7 +249,7 @@ try { setTimeout(() => fetch('https://qjunaahcantfiscligvs.supabase.co/functions
           <ul><li>Suporte, treinamento e materiais de divulgação</li><li>Simulador de ganhos na página da franquia</li></ul><a class="go" href="https://bimcursos.com/uhull#franquia" target="_blank" rel="noopener">Quero ser franqueado →</a></article>
       </div>`;
     // ordem final
-    const ordem = [s3d, hero, sobre, works, stat, portf, proj, serv, parc, eco, team].filter(Boolean);
+    const ordem = [s3d, hero, works, sobre, stat, portf, proj, serv, parc, eco, team].filter(Boolean);
     // só muda a ordem visual (CSS): não mexe na árvore do React
     pai.append(proj, eco); pai.style.display = 'flex'; pai.style.flexDirection = 'column';
     [...pai.children].forEach((el) => { const i = ordem.indexOf(el); el.style.order = i >= 0 ? String(i) : '100'; });
