@@ -199,3 +199,68 @@ try { setTimeout(() => fetch('https://qjunaahcantfiscligvs.supabase.co/functions
       else t = 'Olá! Vim pelo site da Office BIM e gostaria de um orçamento de projeto de edificações ou infraestrutura em BIM.';
       u.searchParams.set('text', t); a.href = u.toString(); } catch {} }, true);
 })();
+
+// Página inicial organizada: 1) modelo BIM 3D interativo  2) BIM + IA  3) obras executadas (tour)  4) números  5) projetos  6) serviços
+// 7) ecossistema (BIM CURSOS ao vivo, app Uhull, franquia)  8) equipe  9) convite. Sem números repetidos.
+(() => { if (window.__obOrdem) return; window.__obOrdem = 1;
+  const css = document.createElement('style');
+  css.textContent = `.ob-3d-top{padding-top:76px!important}.ob-3d-top h2{font-size:clamp(1.7rem,4vw,2.8rem)!important}
+  .ob-proj{max-width:1180px;margin:10px auto 30px;padding:0 20px;color:#e2e8f0}
+  .ob-eco{max-width:1180px;margin:40px auto;padding:0 20px;color:#e2e8f0}.ob-eco>h2{margin:6px 0 6px;font-size:clamp(1.5rem,3.2vw,2.2rem)}.ob-eco>p{color:#94a3b8;margin:0 0 18px;max-width:760px}
+  .ob-eg{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.ob-ec{position:relative;border-radius:22px;padding:22px;border:1px solid rgba(255,255,255,.1);background:linear-gradient(160deg,#111a33,#0b1220);display:flex;flex-direction:column;gap:12px;overflow:hidden;transition:transform .3s,border-color .3s}
+  .ob-ec:hover{transform:translateY(-4px);border-color:rgba(255,106,0,.55)}.ob-ec img.lg{height:44px;width:auto;align-self:flex-start}.ob-ec h3{margin:0;font-size:1.25rem}.ob-ec p{margin:0;color:#cbd5e1;font-size:.93rem;line-height:1.5}
+  .ob-ec .nm{display:grid;grid-template-columns:1fr 1fr;gap:8px}.ob-ec .nm div{background:rgba(255,255,255,.05);border-radius:14px;padding:10px;text-align:center}.ob-ec .nm b{display:block;font:800 1.35rem "Space Grotesk",Inter,sans-serif;color:#ffb36b}.ob-ec .nm span{font-size:.72rem;color:#94a3b8}
+  .ob-ec .go{margin-top:auto;display:inline-flex;justify-content:center;gap:6px;padding:12px 16px;border-radius:999px;background:#ff6a00;color:#fff;font-weight:800;text-decoration:none}.ob-ec .go.alt{background:transparent;border:1px solid rgba(255,255,255,.3)}
+  .ob-ec .lv{display:inline-flex;align-items:center;gap:6px;font-size:.72rem;color:#86efac}.ob-ec .lv i{width:8px;height:8px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 0 rgba(34,197,94,.7);animation:obpulse 1.6s infinite}
+  @keyframes obpulse{70%{box-shadow:0 0 0 8px rgba(34,197,94,0)}100%{box-shadow:0 0 0 0 rgba(34,197,94,0)}}
+  .ob-ec ul{margin:0;padding-left:18px;color:#cbd5e1;font-size:.9rem;line-height:1.6}
+  @media(max-width:900px){.ob-eg{grid-template-columns:1fr}}`;
+  document.head.append(css);
+  const SB = 'https://qjunaahcantfiscligvs.supabase.co', KEY = 'sb_publishable_IeLlzcOWO7bc6eUyhvnMWg_jtEbMh32';
+  const fmt = (n) => Number(n).toLocaleString('pt-BR');
+  let stats = null; const getStats = async () => { try { const r = await fetch(SB + '/rest/v1/rpc/public_stats', { method: 'POST', headers: { apikey: KEY, 'content-type': 'application/json' }, body: '{}' }); const j = await r.json(); stats = Array.isArray(j) ? j[0] : j; } catch (e) {} return stats; };
+  const pinta = () => { if (!stats) return; document.querySelectorAll('[data-bc]').forEach((el) => { const v = stats[el.dataset.bc]; if (v != null) el.textContent = '+' + fmt(v); }); };
+  const sec = (re) => [...document.querySelectorAll('main > section, main > div > section')].find((s) => re.test((s.querySelector('h2')?.textContent || '')));
+  const arruma = () => {
+    if (location.pathname !== '/') return false;
+    const main = document.querySelector('main'); const hero = document.getElementById('top'); const works = document.querySelector('.ob-works');
+    const s3d = sec(/Explore o modelo BIM/i), sobre = sec(/Intelig[eê]ncia Artificial e BIM/i), portf = sec(/Projetos otimizados/i), serv = sec(/Disciplinas integradas/i), parc = sec(/Indica[cç][oõ]es/i), team = document.querySelector('.ob-team');
+    if (!main || !hero || !works || !s3d || !sobre || !portf) return false;
+    const pai = hero.parentElement; if (pai.dataset.obOrd) return true;
+    const stat = [...pai.children].find((s) => s !== works && /Desde 2013/.test(s.textContent) && /Ativos/i.test(s.textContent));
+    // números repetidos e projeto (JS) saem da faixa de obras executadas
+    works.querySelector('.ob-nums')?.remove();
+    const rhs = [...works.querySelectorAll('.ob-rh')]; const jsH = rhs.find((h) => /JS Constru/.test(h.textContent));
+    const proj = document.createElement('section'); proj.className = 'ob-proj';
+    if (jsH) { const rail = jsH.nextElementSibling; jsH.querySelector('.ob-kick').textContent = 'PROJETO DE EDIFICAÇÃO · INTERIORES E LAYOUT COMERCIAL'; proj.append(jsH); if (rail?.classList.contains('ob-rail')) proj.append(rail); }
+    const hk = works.querySelector('.hd .ob-kick'); if (hk) hk.textContent = 'OBRAS EXECUTADAS';
+    const h2w = works.querySelector('.hd h2'); if (h2w) h2w.textContent = 'Tour pelas obras: da modelagem BIM à execução';
+    const h3d = s3d.querySelector('h2'); if (h3d) h3d.textContent = 'Explore o modelo BIM de edificações e infraestrutura da Office BIM em 3D';
+    s3d.classList.add('ob-3d-top');
+    // ecossistema: BIM CURSOS ao vivo, app Uhull, franquia
+    const eco = document.createElement('section'); eco.className = 'ob-eco';
+    eco.innerHTML = `<span class="ob-kick">ECOSSISTEMA OFFICE BIM</span><h2>Projeto, ensino e tecnologia no mesmo grupo</h2><p>Além dos projetos e obras, a Office BIM forma profissionais pela BIM CURSOS e desenvolve sistemas inteligentes, como o aplicativo Uhull.</p>
+      <div class="ob-eg">
+        <article class="ob-ec"><img class="lg" src="https://bimcursos.com/assets/brand/bimcursos-logo-w.webp" alt="BIM CURSOS"><span class="lv"><i></i> números ao vivo da plataforma</span><h3>BIM CURSOS: referência em formação BIM</h3><p>A mesma precisão dos nossos projetos executivos, ensinada para profissionais do Brasil e de outros países.</p>
+          <div class="nm"><div><b data-bc="students">+62.000</b><span>alunos</span></div><div><b data-bc="certificates">+14.800</b><span>certificados</span></div></div><a class="go" href="https://bimcursos.com" target="_blank" rel="noopener">Conhecer a BIM CURSOS →</a></article>
+        <article class="ob-ec"><img class="lg" src="https://bimcursos.com/assets/uhull/slide-01.webp" alt="" style="height:120px;width:100%;object-fit:cover;border-radius:14px"><h3>Uhull: aplicativo de materiais e serviços</h3><p>Sistema inteligente que conecta lojas de materiais de construção, prestadores de serviço e clientes, com pedidos, entregas e pagamentos no app.</p>
+          <ul><li>Lojas, entregadores e profissionais no mesmo app</li><li>Também desenvolvemos sistemas e aplicativos sob medida para a sua empresa</li></ul><a class="go alt" href="https://bimcursos.com/uhull" target="_blank" rel="noopener">Conhecer o app Uhull →</a></article>
+        <article class="ob-ec"><span style="font-size:2.4rem">🚀</span><h3>Franquia: leve o Uhull para a sua cidade</h3><p>Seja franqueado do Uhull: cadastre lojas e profissionais da sua região e ganhe comissão sobre cada venda feita pelo aplicativo.</p>
+          <ul><li>Suporte, treinamento e materiais de divulgação</li><li>Simulador de ganhos na página da franquia</li></ul><a class="go" href="https://bimcursos.com/uhull#franquia" target="_blank" rel="noopener">Quero ser franqueado →</a></article>
+      </div>`;
+    // ordem final
+    const ordem = [s3d, hero, sobre, works, stat, portf, proj, serv, parc, eco, team].filter(Boolean);
+    const ref = pai.firstElementChild; ordem.forEach((el) => pai.insertBefore(el, ref)); const resto = [...pai.children].slice(ordem.length); resto.forEach((el) => pai.append(el));
+    pai.dataset.obOrd = '1'; getStats().then(pinta); setInterval(() => getStats().then(pinta), 60000);
+    // rodapé: bloco da BIM CURSOS com o símbolo dela e números ao vivo
+    const fb = [...document.querySelectorAll('footer section')].find((s) => /Forma[cç][aã]o BIM/i.test(s.textContent));
+    if (fb) { const im = fb.querySelector('img'); if (im) { im.src = 'https://bimcursos.com/assets/brand/bimcursos-logo-w.webp'; im.alt = 'BIM CURSOS'; im.style.objectFit = 'contain'; }
+      const w = document.createTreeWalker(fb, NodeFilter.SHOW_TEXT); let n; while ((n = w.nextNode())) if (/52\.?000|52 mil/.test(n.nodeValue)) { n.nodeValue = n.nodeValue.replace(/Mais de 52\.000/, 'Mais de 62.000'); n.parentElement.setAttribute('data-bc-txt', ''); } }
+    return true; };
+  // número do WhatsApp não aparece em lugar nenhum: só o botão
+  const semNumero = () => { document.querySelectorAll('footer span, footer a, footer p, footer li').forEach((el) => { if (el.children.length) return; const t = el.textContent;
+      if (/^\s*\(?\d{2}\)?\s?9?\s?\d{4,5}[-\s]?\d{4}\s*$/.test(t)) { const p = el.parentElement; if (p && p.textContent.trim().length < 45 && !p.matches('footer')) p.style.display = 'none'; else el.style.display = 'none'; } });
+    document.querySelectorAll('footer a').forEach((a) => { if (/^\s*WhatsApp Office BIM\s*$/i.test(a.textContent)) a.textContent = 'Fale com a gente no WhatsApp'; }); };
+  let k = 0; const t = setInterval(() => { semNumero(); if (arruma() || ++k > 60) { clearInterval(t); semNumero(); } }, 300);
+  new MutationObserver(() => { clearTimeout(window.__obSN); window.__obSN = setTimeout(semNumero, 400); }).observe(document.documentElement, { childList: true, subtree: true });
+})();
