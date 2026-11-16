@@ -50,7 +50,7 @@ const CSS = ".bot{--bg2:#0e1222;--tx:#e8ecf5;--line:rgba(255,255,255,.12);--mut:
   let curStop = null;
   const hush = () => { try { curStop?.(); } catch (e) {} curStop = null; try { stopSay?.(); } catch (e) {} stopSay = null; try { speechSynthesis.cancel(); } catch (e) {} };
   const falavel = (t) => { let s = t.replace(/https?:\/\/\S+/g, '').replace(/(^|\s)\/[a-z][\w\-\/]*\/?/g, ' ').replace(/[*#_`>|]/g, '').replace(/[\u{1F000}-\u{1FFFF}☀-➿️]/gu, '').replace(/\s+\n/g, '\n').trim();
-    if (s.length > 480) { const first = s.split(/\n/).find((x) => x.trim().length > 20) || s; s = first.slice(0, 420).replace(/[^.!?]*$/, '') || first.slice(0, 400); s += ' Deixei os detalhes escritos no chat.'; } return s; };
+    if (s.length > 1100) { const first = s.split(/\n/).find((x) => x.trim().length > 20) || s; s = first.slice(0, 1000).replace(/[^.!?]*$/, '') || first.slice(0, 980); s += vmode ? ' O resto está escrito aqui: toque no balãozinho de conversa para ver.' : ' O resto está escrito aqui embaixo.'; } return s; };
   const browserSay = (t) => new Promise((res) => { try { const u = new SpeechSynthesisUtterance(t); u.lang = 'pt-BR'; u.rate = 1.03; const fem = !/Charon|Puck/.test(voz);
       const vs = speechSynthesis.getVoices().filter((x) => /pt(-|_)BR/i.test(x.lang)); const v = vs.find((x) => (fem ? /fem|luciana|francisca|maria|vit[oó]ria|google/i : /masc|daniel|antonio|ant[oô]nio|felipe|male/i).test(x.name)) || vs[0];
       if (v) u.voice = v; u.onend = res; u.onerror = res; speechSynthesis.cancel(); speechSynthesis.speak(u); stopSay = () => { speechSynthesis.cancel(); res(); }; } catch (e) { res(); } });
@@ -61,7 +61,7 @@ const CSS = ".bot{--bg2:#0e1222;--tx:#e8ecf5;--line:rgba(255,255,255,.12);--mut:
   const limpa = (t) => t.replace(/https?:\/\/\S+/g, '').replace(/(^|\s)\/[a-z][\w\-\/]*\/?/g, ' ').replace(/[*#_`>|•]/g, '').replace(/[\u{1F000}-\u{1FFFF}\u2600-\u27BF\uFE0F]/gu, '').replace(/\s+/g, ' ').trim();
   // Fala em cascata: cada frase pronta já vai para a voz enquanto o resto ainda chega
   const falador = () => { let chain = Promise.resolve(), total = 0, cut = false, stop = false; curStop = () => { stop = true; };
-    return { add: (frase) => { if (stop || cut) return; let t = limpa(frase); if (t.length < 2) return; if (total + t.length > 480) { cut = true; t = 'Deixei os detalhes escritos no chat.'; } total += t.length;
+    return { add: (frase) => { if (stop || cut) return; let t = limpa(frase); if (t.length < 2) return; if (total + t.length > 1100) { cut = true; t = vmode ? 'O resto, com valores e detalhes, está escrito aqui. Toque no balãozinho de conversa para ver.' : 'O resto está escrito aqui embaixo.'; } total += t.length;
         const pr = ttsFetch(t); chain = chain.then(async () => { if (stop) return; speaking(true); const d = await pr; if (stop) return; if (d?.audio && ac) await playPCM(d); else await browserSay(t); }); },
       fim: async () => { await chain; an = null; if (!stop) speaking(false); } }; };
   const say = async (t) => { hush(); unlock(); const f = falador(); (limpa(t).match(/[^.!?]+[.!?]*/g) || []).forEach(f.add); await f.fim(); };
@@ -122,7 +122,13 @@ ${p.prazo ? `<div class="box"><h3>Prazo</h3>${esc(p.prazo)}</div>` : ''}
     bar.innerHTML = `<b>📄 Proposta ${esc(p.numero)} · ${brl(p.total)}</b><div><button type="button" data-a="pdf">Baixar PDF</button><button type="button" data-a="mail">Enviar por e-mail</button></div>`;
     bub.after(bar); log.scrollTop = log.scrollHeight;
     $('[data-a=pdf]', bar).onclick = () => pdfProposta(p);
-    $('[data-a=mail]', bar).onclick = () => { location.href = 'mailto:' + encodeURIComponent(p.email || '') + '?subject=' + encodeURIComponent('Proposta Office BIM ' + p.numero) + '&body=' + encodeURIComponent(resumo(p) + '\n\nBaixe o PDF completo pelo assistente em obim.com.br.'); }; };
+    $('[data-a=mail]', bar).onclick = async (ev) => { const bt = ev.currentTarget; let para = (p.email || '').trim();
+      if (!para) para = (prompt('Para qual e-mail eu envio a proposta?') || '').trim(); if (!para) return; p.email = para;
+      bt.disabled = true; bt.textContent = 'Enviando…';
+      const r = await fetch(SITE.supabaseUrl + '/rest/v1/rpc/proposta_email', { method: 'POST', headers: { 'content-type': 'application/json', apikey: SITE.supabaseKey, authorization: 'Bearer ' + SITE.supabaseKey }, body: JSON.stringify({ p, para }) }).catch(() => null);
+      const j = r ? await r.json().catch(() => ({})) : {};
+      if (r?.ok) { bt.textContent = '✓ Enviada para ' + para; add('assistant', '📧 Pronto! Enviei a proposta ' + p.numero + ' para ' + para + '. Confira também a caixa de spam. A equipe da Office BIM recebeu uma cópia e pode te chamar para fechar os detalhes.'); }
+      else { bt.disabled = false; bt.textContent = 'Enviar por e-mail'; alert('Não consegui enviar: ' + (j.message || 'tente de novo em instantes')); } }; };
   const ask = async (q, voiced) => { q = q.trim(); if (!q && !files.length) return; $('.bot-sug', box)?.remove(); hush();
     if (!proto) novoProto(); const ub = add('user', q || '📎 arquivo enviado'); const tk = document.createElement('span'); tk.className = 'tick'; tk.textContent = '✓'; ub.append(tk); hist.push({ role: 'user', content: q || 'Analise o arquivo enviado e me ajude.' });
     const sendFiles = files; files = []; chips.innerHTML = '';
