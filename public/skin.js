@@ -250,7 +250,7 @@ try { setTimeout(() => fetch('https://qjunaahcantfiscligvs.supabase.co/functions
       </div>`;
     // ordem final
     const ordem = [s3d, hero, sobre, works, stat, portf, proj, serv, parc, eco, team].filter(Boolean);
-    const ref = pai.firstElementChild; ordem.forEach((el) => pai.insertBefore(el, ref)); const resto = [...pai.children].slice(ordem.length); resto.forEach((el) => pai.append(el));
+    const frag = document.createDocumentFragment(); ordem.forEach((el) => frag.append(el)); pai.prepend(frag);
     pai.dataset.obOrd = '1'; getStats().then(pinta); setInterval(() => getStats().then(pinta), 60000);
     // rodapé: bloco da BIM CURSOS com o símbolo dela e números ao vivo
     const fb = [...document.querySelectorAll('footer section')].find((s) => /Forma[cç][aã]o BIM/i.test(s.textContent));
