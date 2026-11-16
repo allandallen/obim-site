@@ -204,7 +204,7 @@ try { setTimeout(() => fetch('https://qjunaahcantfiscligvs.supabase.co/functions
 // 7) ecossistema (BIM CURSOS ao vivo, app Uhull, franquia)  8) equipe  9) convite. Sem números repetidos.
 (() => { if (window.__obOrdem) return; window.__obOrdem = 1;
   const css = document.createElement('style');
-  css.textContent = `.ob-3d-top{padding-top:76px!important}.ob-3d-top h2{font-size:clamp(1.7rem,4vw,2.8rem)!important}
+  css.textContent = `.ob-3d-top{padding-top:68px!important}.ob-3d-top>div{display:flex;flex-direction:column;padding-top:10px!important}.ob-3d-top>div>div:first-child{order:2;margin-top:18px;border-bottom:0!important;padding-bottom:0!important}.ob-3d-top>div>div:nth-child(2){order:1;margin-top:0!important}.ob-3d-top h2{font-size:clamp(1.7rem,4vw,2.8rem)!important}
   .ob-proj{max-width:1180px;margin:10px auto 30px;padding:0 20px;color:#e2e8f0}
   .ob-eco{max-width:1180px;margin:40px auto;padding:0 20px;color:#e2e8f0}.ob-eco>h2{margin:6px 0 6px;font-size:clamp(1.5rem,3.2vw,2.2rem)}.ob-eco>p{color:#94a3b8;margin:0 0 18px;max-width:760px}
   .ob-eg{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.ob-ec{position:relative;border-radius:22px;padding:22px;border:1px solid rgba(255,255,255,.1);background:linear-gradient(160deg,#111a33,#0b1220);display:flex;flex-direction:column;gap:12px;overflow:hidden;transition:transform .3s,border-color .3s}
