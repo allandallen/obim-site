@@ -266,3 +266,42 @@ try { setTimeout(() => fetch('https://qjunaahcantfiscligvs.supabase.co/functions
   let k = 0; const t = setInterval(() => { semNumero(); if (arruma() || ++k > 60) { clearInterval(t); semNumero(); } }, 300);
   new MutationObserver(() => { clearTimeout(window.__obSN); window.__obSN = setTimeout(semNumero, 400); }).observe(document.documentElement, { childList: true, subtree: true });
 })();
+
+// Visual mais impactante (sem mexer na estrutura): entrada suave das seções, títulos com destaque,
+// cartões que reagem ao toque/mouse, números que contam e barra de progresso de leitura
+(() => { if (window.__obFx) return; window.__obFx = 1;
+  const st = document.createElement('style');
+  st.textContent = `
+  html{scroll-behavior:smooth}
+  .ob-prog{position:fixed;left:0;top:0;height:3px;width:0;z-index:9999;background:linear-gradient(90deg,#ff6a00,#ffb36b,#7c3aed);box-shadow:0 0 12px rgba(255,106,0,.6);transition:width .1s linear;pointer-events:none}
+  .ob-rv{opacity:0;transform:translateY(34px);transition:opacity .8s ease,transform .8s cubic-bezier(.2,.7,.2,1)}
+  .ob-rv.ob-in{opacity:1;transform:none}
+  main section h2{letter-spacing:-.02em}
+  main section h2 .ob-acc{background:linear-gradient(90deg,#ff8a3d,#ffd166);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .ob-works .ob-wc,.ob-rc,.ob-tc,.ob-ec,.ob-proj .ob-rc{transition:transform .35s cubic-bezier(.2,.7,.2,1),box-shadow .35s ease,border-color .35s ease}
+  .ob-works .ob-wc:hover,.ob-rc:hover,.ob-tc:hover{transform:translateY(-6px);box-shadow:0 22px 50px rgba(0,0,0,.45),0 0 0 1px rgba(255,106,0,.45)}
+  .ob-works img,.ob-rc img,.ob-proj img{transition:transform .9s cubic-bezier(.2,.7,.2,1)}
+  .ob-works .ob-wc:hover img,.ob-rc:hover img{transform:scale(1.06)}
+  main a[href*="wa.me"],main .go{position:relative;overflow:hidden}
+  main a[href*="wa.me"]::after,main .go::after{content:"";position:absolute;inset:0;transform:translateX(-120%);background:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.35) 50%,transparent 70%);animation:obBrilho 3.8s ease-in-out infinite}
+  @keyframes obBrilho{0%,60%{transform:translateX(-120%)}100%{transform:translateX(120%)}}
+  @media (prefers-reduced-motion:reduce){.ob-rv{opacity:1!important;transform:none!important}main a[href*="wa.me"]::after,main .go::after{animation:none}}`;
+  document.head.append(st);
+  const bar = document.createElement('div'); bar.className = 'ob-prog'; document.body.append(bar);
+  addEventListener('scroll', () => { const h = document.documentElement; const p = h.scrollTop / Math.max(1, h.scrollHeight - h.clientHeight); bar.style.width = (p * 100).toFixed(1) + '%'; }, { passive: true });
+  // destaca a última palavra-chave dos títulos principais
+  const realca = () => document.querySelectorAll('.ob-works h2, .ob-eco h2, .ob-team h2, .ob-proj h2').forEach((h) => { if (h.dataset.obAcc || h.children.length || h.closest('.bot')) return; h.dataset.obAcc = 1;
+    const t = h.textContent; const m = t.match(/^(.*?)(\b(?:BIM|3D|execução|obra|IA|lucro|grupo|BIM\.?)\b)([^]*)$/i); if (!m) return; h.innerHTML = '';
+    h.append(document.createTextNode(m[1])); const s = document.createElement('span'); s.className = 'ob-acc'; s.textContent = m[2]; h.append(s, document.createTextNode(m[3])); });
+  // entrada das seções ao rolar (só quem está fora da tela; o que já aparece não pisca)
+  const io = 'IntersectionObserver' in window ? new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('ob-in'); io.unobserve(e.target); } }), { threshold: 0.12 }) : null;
+  const revela = () => { if (!io) return; document.querySelectorAll('main section:not([data-ob-rv])').forEach((s) => { s.dataset.obRv = 1; if (s.id === 'top') return; const r = s.getBoundingClientRect(); if (r.top < innerHeight * 0.9) return; s.classList.add('ob-rv'); io.observe(s); }); };
+  // números que contam (ex.: +20, 500.000, 10 milhões) quando aparecem
+  const conta = (el) => { const t = el.textContent.trim(); const m = t.match(/^([^\d]*)(\d{1,3}(?:\.\d{3})*|\d+)(.*)$/); if (!m || el.dataset.obCnt) return; el.dataset.obCnt = 1;
+    const fim = +m[2].replace(/\./g, ''); if (!fim || fim === 2013) return; const t0 = performance.now(), dur = 1400;
+    const f = (now) => { const k = Math.min(1, (now - t0) / dur), v = Math.round(fim * (1 - Math.pow(1 - k, 3))); el.textContent = m[1] + v.toLocaleString('pt-BR') + m[3]; if (k < 1) requestAnimationFrame(f); }; requestAnimationFrame(f); };
+  const ion = 'IntersectionObserver' in window ? new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { conta(e.target); ion.unobserve(e.target); } }), { threshold: 0.6 }) : null;
+  const numeros = () => { if (!ion) return; document.querySelectorAll('.ob-works b, .ob-team b, .ob-proj b').forEach((b) => { if (b.dataset.obN || b.children.length || b.closest('[data-bc]') || b.hasAttribute('data-bc')) return; if (!/^\+?\d[\d.]*\s*(mil|milh(ões|ão)|m²|%)?/i.test(b.textContent.trim())) return; b.dataset.obN = 1; ion.observe(b); }); };
+  const tudo = () => { realca(); revela(); numeros(); };
+  let k = 0; const t = setInterval(() => { tudo(); if (++k > 20) clearInterval(t); }, 500);
+})();
