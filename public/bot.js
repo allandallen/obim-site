@@ -355,3 +355,16 @@ ${p.prazo ? `<div class="box"><h3>Prazo</h3>${esc(p.prazo)}</div>` : ''}
     setTimeout(() => T('view'), 1000); setInterval(() => { if (!document.hidden) T('hb'); }, 60000);
     document.addEventListener('click', (e) => { if (e.target.closest('a[href*="wa.me"]')) T('whatsapp'); if (e.target.closest('.orb')) T('assistente'); }, true);
   } catch (e) {} })();
+
+// Documentos (proposta, PDF) abrem aqui mesmo, por cima da página, sem abrir outra aba
+(() => { if (window.__docInline) return; window.__docInline = 1; const abre0 = window.open.bind(window);
+  window.open = (url, alvo, ...r) => { if (url && url !== 'about:blank') return abre0(url, alvo, ...r);
+    let html = '', fr = null; const ov = document.createElement('div');
+    ov.style.cssText = 'position:fixed;inset:0;z-index:2147483000;background:rgba(5,10,25,.85);display:flex;flex-direction:column';
+    ov.innerHTML = '<div style="display:flex;gap:8px;align-items:center;padding:10px 12px;background:#0b1b3a;color:#fff;font:700 .95rem Inter,system-ui,sans-serif"><b style="flex:1">📄 Documento</b><button data-x="p" style="border:0;border-radius:999px;background:#ff6a00;color:#fff;font:800 .9rem Inter,system-ui,sans-serif;padding:10px 16px;cursor:pointer">⬇ Salvar PDF / Imprimir</button><button data-x="f" style="border:1px solid rgba(255,255,255,.3);border-radius:999px;background:transparent;color:#fff;font:700 .9rem Inter,system-ui,sans-serif;padding:10px 14px;cursor:pointer">✕ Fechar</button></div><iframe style="flex:1;border:0;background:#fff;width:100%"></iframe>';
+    fr = ov.querySelector('iframe'); const fecha = () => { ov.remove(); document.documentElement.style.overflow = ''; };
+    ov.querySelector('[data-x=f]').onclick = fecha; ov.querySelector('[data-x=p]').onclick = () => { try { fr.contentWindow.focus(); fr.contentWindow.print(); } catch (e) {} };
+    document.body.append(ov); document.documentElement.style.overflow = 'hidden';
+    const doc = { write: (s) => { html += s; }, writeln: (s) => { html += s + '\n'; }, open: () => {}, close: () => { fr.srcdoc = html.replace(/window\.onload\s*=\s*\(\)\s*=>\s*setTimeout\(\(\)\s*=>\s*print\(\)\s*,\s*\d+\)/, ''); }, title: '' };
+    return { document: doc, focus: () => {}, print: () => ov.querySelector('[data-x=p]').click(), close: fecha, closed: false, get location() { return { href: '' }; } }; };
+})();
